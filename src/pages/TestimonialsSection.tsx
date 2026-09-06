@@ -1,160 +1,263 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Quote, Sparkles, CheckCircle2, Send, MessageSquarePlus, AlertCircle } from 'lucide-react';
+import { Star, Quote, Sparkles, CheckCircle2, Send, MessageSquarePlus, AlertCircle, Clock, Phone, User } from 'lucide-react';
+import { supabase } from "../lib/supabaseClient";
 
-const TestimonialsSection = () => {
-  const [testimonials, setTestimonials] = useState([
-    {
-      name: 'أحمد إبراهيم',
-      role: 'طالب في المرحلة الثانوية',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop',
-      content: 'منصة ZED غيرت تماماً طريقتي في المذاكرة. الشرح ممتاز والاختبارات الفورية ساعدتني أجيب مجموع عالي!',
-      rating: 5,
-      badge: 'طالب متميز',
-    },
-    {
-      name: 'د. سارة محمود',
-      role: 'مدرسة مادة الرياضيات',
-      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=300&auto=format&fit=crop',
-      content: 'كمدرسة، وجدت في منصة ZED الأدوات المثالية للتواصل مع الطلاب ومتابعة تقدمهم بدقة شديدة.',
-      rating: 5,
-      badge: 'مدرس معتمد',
-    },
-    {
-      name: 'عمر خالد',
-      role: 'طالب جامعي - تخصص حاسب',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop',
-      content: 'الدورات البرمجية والمناهج المتقدمة احترافية جداً ومرتبة بطريقة تخليك تفهم من أول مرة.',
-      rating: 5,
-      badge: 'خريج الدورات',
-    },
-  ]);
-
+const TestimonialsSection = ({ isDark }: { isDark?: boolean }) => {
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [role, setRole] = useState('طالب في المنصة');
   const [content, setContent] = useState('');
   const [rating, setRating] = useState(5);
   const [feedbackMessage, setFeedbackMessage] = useState({ text: '', type: '' });
+  const [loading, setLoading] = useState(false);
 
-  const validateAndSubmit = (e) => {
+  useEffect(() => {
+    fetchTestimonials();
+  }, []);
+
+  const fetchTestimonials = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_feedback')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) {
+        const formatted = data.map((item, index) => {
+          const randomImageId = (item.id || index + 1) * 10;
+          const avatarUrl = `https://images.unsplash.com/photo-${1500000000000 + randomImageId % 900000}?auto=format&fit=crop&w=200&h=200&q=80`;
+          
+          return {
+            id: item.id,
+            name: item.name,
+            role: item.role,
+            avatar: avatarUrl,
+            content: item.message,
+            rating: item.rating || 5,
+            badge: item.role && item.role.includes('مدرس') ? 'مدرس معتمد' : 'طالب متميز',
+            span: index % 3 === 0 ? 'sm:col-span-2 lg:col-span-1' : 'sm:col-span-1',
+          };
+        });
+        setTestimonials(formatted);
+      }
+    } catch (err) {
+      console.error('Error fetching testimonials:', err);
+    }
+  };
+
+  const validateAndSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !content.trim()) {
-      setFeedbackMessage({ text: 'برجاء ملء جميع الحقول المطلوبة.', type: 'error' });
+    if (!name.trim() || !phone.trim() || !content.trim()) {
+      setFeedbackMessage({ text: 'برجاء ملء جميع الحقول المطلوبة بما فيها رقم الهاتف.', type: 'error' });
       return;
     }
 
-    if (content.length < 10 || content.length > 300) {
-      setFeedbackMessage({ text: 'التعليق يجب أن يكون بين 10 و 300 حرف.', type: 'error' });
+    if (content.length < 3 || content.length > 500) {
+      setFeedbackMessage({ text: 'التعليق يجب ألا يقل عن 3 أحرف وألا يتجاوز 500 حرف.', type: 'error' });
       return;
     }
 
-    const blockedWords = ['كلمة_سيئة', 'spam', 'hack'];
-    if (blockedWords.some(word => content.toLowerCase().includes(word))) {
-      setFeedbackMessage({ text: 'عذراً، يحتوي التعليق على مصطلحات غير مسموح بها.', type: 'error' });
-      return;
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.from('user_feedback').insert([
+        {
+          name: name,
+          phone: phone,
+          role: role,
+          feedback_type: 'comment',
+          message: content,
+          rating: rating,
+          status: 'pending',
+        },
+      ]);
+
+      if (error) throw error;
+
+      setFeedbackMessage({ 
+        text: 'شكراً لك! تم إرسال تقييمك بنجاح، وسيتم مراجعته ونشره قريباً من قبل إدارة المنصة.', 
+        type: 'success' 
+      });
+      setName('');
+      setPhone('');
+      setContent('');
+      setRating(5);
+
+      setTimeout(() => {
+        setFeedbackMessage({ text: '', type: '' });
+      }, 6000);
+    } catch (err) {
+      console.error('Error inserting feedback:', err);
+      setFeedbackMessage({ text: 'حدث خطأ أثناء الإرسال، تأكد من إعدادات الجدول.', type: 'error' });
+    } finally {
+      setLoading(false);
     }
-
-    const newTestimonial = {
-      name,
-      role,
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=300&auto=format&fit=crop',
-      content,
-      rating,
-      badge: role.includes('مدرس') ? 'مدرس معتمد' : 'طالب جديد',
-    };
-
-    setTestimonials([newTestimonial, ...testimonials]);
-    setFeedbackMessage({ text: 'شكراً لك! تم إرسال تقييمك بنجاح وعرضه مباشرة.', type: 'success' });
-
-    setName('');
-    setContent('');
-    setRating(5);
-
-    setTimeout(() => {
-      setFeedbackMessage({ text: '', type: '' });
-    }, 4000);
   };
 
   return (
-    <section className="relative w-full py-28 px-6 bg-[#070b19] overflow-hidden border-t border-white/5" dir="rtl">
-      
-      {/* خلفية جمالية خفيفة */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-tr from-[#002aff]/15 to-[#00bfff]/15 rounded-full blur-[180px] pointer-events-none" />
+    <section 
+      style={{
+        backgroundColor: isDark ? '#020617' : '#f8fafc',
+        color: isDark ? '#f1f5f9' : '#0f172a'
+      }}
+      className="relative w-full py-32 px-6 overflow-hidden transition-colors duration-300" 
+      dir="rtl"
+    >
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-blue-600/10 rounded-full blur-[160px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10">
         
-        {/* رأس القسم */}
         <div className="text-center max-w-3xl mx-auto mb-20">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/10 text-[#38bdf8] text-xs font-bold mb-4"
+            style={{
+              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.08)',
+              borderColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.3)',
+              color: isDark ? '#60a5fa' : '#2563eb'
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold mb-6 backdrop-blur-md shadow-lg"
           >
-            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-            <span>قصص نجاح حقيقية</span>
+            <Sparkles className="w-4 h-4 animate-pulse" />
+            <span>قصص نجاح من مجتمعنا</span>
           </motion.div>
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight mb-6">
-            ماذا يقول عنا <span className="bg-gradient-to-r from-[#00bfff] via-[#38bdf8] to-[#002aff] bg-clip-text text-transparent">طلابنا ومدرسونا؟</span>
+          
+          <h2 
+            style={{ color: isDark ? '#ffffff' : '#0f172a' }}
+            className="text-3xl sm:text-5xl font-black tracking-tight leading-tight mb-6"
+          >
+            آراء <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">طلابنا وأساتذتنا</span>
           </h2>
-          <p className="text-slate-400 text-base sm:text-lg font-medium">
-            اطلع على آراء المستخدمين، أو شاركنا تجربتك بكل سهولة.
+          
+          <p 
+            style={{ color: isDark ? '#94a3b8' : '#475569' }}
+            className="text-base sm:text-lg font-medium leading-relaxed"
+          >
+            اطلع على تجارب المستخدمين الحقيقية، أو شاركنا رأيك بكل سهولة.
           </p>
         </div>
 
-        {/* التخطيط المتناسق (شبكة مقسمة: اليمين النموذج، اليسار التقييمات) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           
-          {/* 1. نموذج كتابة التقييم (يأخذ 5 أعمدة) */}
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-5 bg-white/[0.02] border border-white/10 rounded-3xl p-8 backdrop-blur-2xl shadow-2xl relative"
+            style={{
+              backgroundColor: isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.9)',
+              borderColor: isDark ? '#1e293b' : '#cbd5e1'
+            }}
+            className="lg:col-span-5 border rounded-3xl p-8 backdrop-blur-xl shadow-2xl relative sticky top-28"
           >
-            <div className="absolute -inset-px rounded-3xl bg-gradient-to-r from-[#002aff]/20 via-[#00bfff]/20 to-[#002aff]/20 opacity-40 pointer-events-none" />
-
-            <div className="flex items-center gap-3 mb-6 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-[#002aff]/20 border border-[#00bfff]/30 flex items-center justify-center text-[#38bdf8]">
-                <MessageSquarePlus className="w-6 h-6" />
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                <MessageSquarePlus className="w-7 h-7" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white tracking-tight">أضف تقييمك الآن</h3>
-                <p className="text-slate-400 text-xs">رأيك يساهم في تطوير المنصة</p>
+                <h3 
+                  style={{ color: isDark ? '#ffffff' : '#0f172a' }}
+                  className="text-xl font-black tracking-tight"
+                >
+                  أضف تقييمك الآن
+                </h3>
+                <p 
+                  style={{ color: isDark ? '#94a3b8' : '#64748b' }}
+                  className="text-xs mt-1"
+                >
+                  رأيك يساهم في تطوير وتجويد المنصة
+                </p>
               </div>
             </div>
 
             {feedbackMessage.text && (
-              <div className={`p-3.5 rounded-xl mb-5 text-xs font-bold flex items-center gap-2.5 relative z-10 ${
+              <div className={`p-4 rounded-2xl mb-6 text-xs font-bold flex items-start gap-3 ${
                 feedbackMessage.type === 'error' 
-                  ? 'bg-red-500/15 text-red-400 border border-red-500/30' 
-                  : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  ? 'bg-red-950/60 text-red-300 border border-red-800/80' 
+                  : 'bg-blue-950/60 text-blue-200 border border-blue-800/80'
               }`}>
-                {feedbackMessage.type === 'error' ? <AlertCircle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
-                <span>{feedbackMessage.text}</span>
+                {feedbackMessage.type === 'error' ? (
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+                ) : (
+                  <Clock className="w-4 h-4 shrink-0 mt-0.5 text-blue-300" />
+                )}
+                <span className="leading-relaxed">{feedbackMessage.text}</span>
               </div>
             )}
 
-            <form onSubmit={validateAndSubmit} className="space-y-4 relative z-10">
+            <form onSubmit={validateAndSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">الاسم الكريم</label>
-                <input 
-                  type="text" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="مثال: خالد عبدالله"
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-[#00bfff] transition-all"
-                  required
-                />
+                <label 
+                  style={{ color: isDark ? '#cbd5e1' : '#334155' }}
+                  className="block text-xs font-bold mb-1.5"
+                >
+                  الاسم الكريم
+                </label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="مثال: خالد عبدالله"
+                    style={{
+                      backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : '#f8fafc',
+                      borderColor: isDark ? '#334155' : '#cbd5e1',
+                      color: isDark ? '#ffffff' : '#0f172a'
+                    }}
+                    className="w-full pl-4 pr-10 py-3 rounded-xl border placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-all"
+                    required
+                  />
+                  <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">صفتك في المنصة</label>
+                <label 
+                  style={{ color: isDark ? '#cbd5e1' : '#334155' }}
+                  className="block text-xs font-bold mb-1.5"
+                >
+                  رقم الهاتف (للتواصل)
+                </label>
+                <div className="relative">
+                  <input 
+                    type="tel" 
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="01012345678"
+                    style={{
+                      backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : '#f8fafc',
+                      borderColor: isDark ? '#334155' : '#cbd5e1',
+                      color: isDark ? '#ffffff' : '#0f172a'
+                    }}
+                    className="w-full pl-4 pr-10 py-3 rounded-xl border placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-all text-left"
+                    dir="ltr"
+                    required
+                  />
+                  <Phone className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+
+              <div>
+                <label 
+                  style={{ color: isDark ? '#cbd5e1' : '#334155' }}
+                  className="block text-xs font-bold mb-1.5"
+                >
+                  صفتك في المنصة
+                </label>
                 <select 
                   value={role} 
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-[#070b19] border border-white/10 text-white text-xs sm:text-sm focus:outline-none focus:border-[#00bfff] transition-all"
+                  style={{
+                    backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : '#f8fafc',
+                    borderColor: isDark ? '#334155' : '#cbd5e1',
+                    color: isDark ? '#ffffff' : '#0f172a'
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-all"
                 >
                   <option value="طالب في المنصة">طالب في المنصة</option>
                   <option value="مدرس معتمد">مدرس معتمد</option>
@@ -163,103 +266,156 @@ const TestimonialsSection = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">التقييم بالنجوم</label>
-                <div className="flex items-center gap-1.5">
+                <label 
+                  style={{ color: isDark ? '#cbd5e1' : '#334155' }}
+                  className="block text-xs font-bold mb-1.5"
+                >
+                  التقييم بالنجوم
+                </label>
+                <div 
+                  style={{
+                    backgroundColor: isDark ? 'rgba(30, 41, 59, 0.5)' : '#f1f5f9',
+                    borderColor: isDark ? 'rgba(51, 65, 85, 0.6)' : '#cbd5e1'
+                  }}
+                  className="flex items-center gap-1.5 p-2.5 rounded-xl border w-fit"
+                >
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       type="button"
                       key={star}
                       onClick={() => setRating(star)}
-                      className="focus:outline-none transition-transform hover:scale-110 p-0.5"
+                      className="focus:outline-none transition-transform hover:scale-110 p-0.5 cursor-pointer"
                     >
-                      <Star className={`w-5 h-5 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-600'}`} />
+                      <Star className={`w-5 h-5 ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'}`} />
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">تعليقك أو تجربتك</label>
+                <label 
+                  style={{ color: isDark ? '#cbd5e1' : '#334155' }}
+                  className="block text-xs font-bold mb-1.5"
+                >
+                  تعليقك أو تجربتك
+                </label>
                 <textarea 
                   value={content} 
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="اكتب تجربتك باختصار..."
-                  rows="3"
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:border-[#00bfff] transition-all resize-none"
+                  rows={3}
+                  style={{
+                    backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : '#f8fafc',
+                    borderColor: isDark ? '#334155' : '#cbd5e1',
+                    color: isDark ? '#ffffff' : '#0f172a'
+                  }}
+                  className="w-full px-4 py-3 rounded-xl border placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-blue-500 transition-all resize-none"
                   required
                 />
               </div>
 
               <button 
                 type="submit"
-                className="w-full py-3.5 bg-gradient-to-r from-[#002aff] to-[#00bfff] hover:opacity-90 text-white font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 text-xs sm:text-sm shadow-[0_10px_20px_rgba(0,42,255,0.3)] cursor-pointer"
+                disabled={loading}
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 text-xs sm:text-sm shadow-lg shadow-blue-600/30 border border-blue-400/30 cursor-pointer disabled:opacity-50"
               >
-                <Send className="w-4 h-4" />
-                <span>إرسال التقييم ونشره</span>
+                <Send className="w-4 h-4 text-white" />
+                <span>{loading ? 'جاري الإرسال...' : 'إرسال التقييم للمراجعة'}</span>
               </button>
             </form>
           </motion.div>
 
-
-          {/* 2. شبكة عرض التقييمات (يأخذ 7 أعمدة) */}
-          <div className="lg:col-span-7 flex flex-col gap-5">
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
             <AnimatePresence>
-              {testimonials.map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: idx * 0.1 }}
-                  className="relative group bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 hover:border-[#00bfff]/40 rounded-3xl p-6 backdrop-blur-2xl transition-all duration-500 shadow-xl flex flex-col justify-between"
+              {testimonials.length === 0 ? (
+                <div 
+                  style={{
+                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.4)' : '#ffffff',
+                    borderColor: isDark ? '#1e293b' : '#cbd5e1',
+                    color: isDark ? '#94a3b8' : '#64748b'
+                  }}
+                  className="sm:col-span-2 text-center py-16 border rounded-3xl text-sm"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#002aff]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none" />
+                  لا توجد تعليقات معتمدة حتى الآن. كن أول من يشارك!
+                </div>
+              ) : (
+                testimonials.map((item, idx) => (
+                  <motion.div
+                    key={item.id || idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: idx * 0.1 }}
+                    style={{
+                      backgroundColor: isDark ? 'rgba(15, 23, 42, 0.4)' : '#ffffff',
+                      borderColor: isDark ? '#1e293b' : '#cbd5e1'
+                    }}
+                    className="relative group hover:border-blue-500/50 rounded-3xl p-6 backdrop-blur-xl transition-all duration-500 shadow-xl flex flex-col justify-between border"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none" />
 
-                  <div>
-                    <div className="flex items-center justify-between mb-4 relative z-10">
-                      <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#38bdf8]">
-                        <Quote className="w-5 h-5 opacity-75" />
+                    <div>
+                      <div className="flex items-center justify-between mb-4 relative z-10">
+                        <div 
+                          style={{
+                            backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                            borderColor: isDark ? '#334155' : '#cbd5e1'
+                          }}
+                          className="w-10 h-10 rounded-xl border flex items-center justify-center text-blue-500"
+                        >
+                          <Quote className="w-5 h-5 opacity-75" />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[...Array(item.rating || 5)].map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                          ))}
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center gap-1">
-                        {[...Array(item.rating)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                    </div>
 
-                    <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed mb-6 relative z-10">
-                      "{item.content}"
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-3.5 pt-4 border-t border-white/5 relative z-10">
-                    <img 
-                      src={item.avatar} 
-                      alt={item.name} 
-                      className="w-10 h-10 rounded-xl object-cover border border-white/10 shadow-md" 
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-bold text-white text-xs sm:text-sm">
-                          {item.name}
-                        </h4>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#00bfff]" />
-                      </div>
-                      <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                        {item.role}
+                      <p 
+                        style={{ color: isDark ? '#cbd5e1' : '#334155' }}
+                        className="text-xs sm:text-sm font-medium leading-relaxed mb-6 relative z-10"
+                      >
+                        "{item.content}"
                       </p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/10 text-[10px] font-bold text-[#38bdf8]">
-                      {item.badge}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+
+                    <div 
+                      style={{ borderColor: isDark ? 'rgba(30, 41, 59, 0.8)' : '#e2e8f0' }}
+                      className="flex items-center gap-3.5 pt-4 border-t relative z-10"
+                    >
+                      <img 
+                        src={item.avatar} 
+                        alt={item.name} 
+                        className="w-10 h-10 rounded-xl object-cover bg-slate-800 border border-slate-700 shadow-md" 
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h4 
+                            style={{ color: isDark ? '#ffffff' : '#0f172a' }}
+                            className="font-bold text-xs sm:text-sm truncate"
+                          >
+                            {item.name}
+                          </h4>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                        </div>
+                        <p 
+                          style={{ color: isDark ? '#94a3b8' : '#64748b' }}
+                          className="text-[11px] font-medium mt-0.5 truncate"
+                        >
+                          {item.role}
+                        </p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-500 shrink-0">
+                        {item.badge}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </AnimatePresence>
           </div>
 
         </div>
-
       </div>
     </section>
   );

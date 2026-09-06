@@ -1,217 +1,397 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
-  Send, 
   MapPin, 
   ArrowLeft, 
   Globe2, 
-  HelpCircle,
-  Code2,
-  Share2,
-  PlayCircle,
-  GitBranch,
-  PhoneCall,
-  Mail
+  ShieldAlert,
+  Mail,
+  Phone,
+  ShieldCheck,
+  BookOpen,
+  Lock,
+  FileText
 } from 'lucide-react';
+import { 
+  FaFacebook, 
+  FaTwitter, 
+  FaInstagram, 
+  FaYoutube, 
+  FaLinkedin, 
+  FaWhatsapp,
+  FaGlobe 
+} from 'react-icons/fa';
+import { supabase } from "../lib/supabaseClient";
 
-const Footer = () => {
-  // روابط وسائل التواصل الاجتماعي مع أيقونات متوافقة ونظيفة
-  const socialLinks = [
-    { 
-      name: 'منصة المشاركة', 
-      icon: Share2, 
-      href: 'https://twitter.com', 
-      color: 'hover:bg-[#002aff] hover:border-[#00bfff]' 
-    },
-    { 
-      name: 'الشبكة المهنية', 
-      icon: GitBranch, 
-      href: 'https://linkedin.com', 
-      color: 'hover:bg-[#0A66C2] hover:border-[#0A66C2]' 
-    },
-    { 
-      name: 'قناة الفيديوهات', 
-      icon: PlayCircle, 
-      href: 'https://youtube.com', 
-      color: 'hover:bg-[#FF0000] hover:border-[#FF0000]' 
-    },
-    { 
-      name: 'مستودع الكود', 
-      icon: Code2, 
-      href: 'https://github.com', 
-      color: 'hover:bg-[#24292e] hover:border-[#24292e]' 
-    },
-  ];
+const Footer = ({ isDark }) => {
+  const [settings, setSettings] = useState({
+    platformName: "ZED",
+    logoUrl: "",
+    address: "جمهورية مصر العربية، القاهرة",
+    email: "support@zed-platform.com",
+    phone: "",
+    social: {
+      facebook: "",
+      twitter: "",
+      instagram: "",
+      whatsapp: "",
+      youtube: "",
+      linkedin: "",
+    }
+  });
+
+  useEffect(() => {
+    async function fetchFooterSettings() {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("*")
+          .order("id", { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0 && !error) {
+          const item = data[0];
+          setSettings({
+            platformName: item.site_name || "ZED",
+            logoUrl: item.logo_url || "",
+            address: item.address || "جمهورية مصر العربية، القاهرة",
+            email: item.email || "support@zed-platform.com",
+            phone: item.phone || "",
+            social: {
+              facebook: item.facebook || "",
+              twitter: item.twitter || "",
+              instagram: item.instagram || "",
+              whatsapp: item.whatsapp || "",
+              youtube: item.youtube || "",
+              linkedin: item.linkedin || "",
+            }
+          });
+        }
+      } catch (err) {
+        console.error("خطأ في جلب بيانات الفوتر:", err);
+      }
+    }
+
+    fetchFooterSettings();
+  }, []);
+
+  const getSocialIcon = (url) => {
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes('facebook.com')) return FaFacebook;
+    if (lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) return FaTwitter;
+    if (lowerUrl.includes('instagram.com')) return FaInstagram;
+    if (lowerUrl.includes('whatsapp.com') || lowerUrl.includes('wa.me')) return FaWhatsapp;
+    if (lowerUrl.includes('youtube.com')) return FaYoutube;
+    if (lowerUrl.includes('linkedin.com')) return FaLinkedin;
+    return FaGlobe; 
+  };
+
+  const activeSocialLinks = Object.entries(settings.social)
+    .filter(([_, url]) => url && url.trim() !== "")
+    .map(([key, url]) => ({
+      key,
+      url,
+      icon: getSocialIcon(url)
+    }));
 
   return (
-    <footer className="relative w-full bg-[#050814] text-slate-300 pt-28 pb-14 px-6 overflow-hidden border-t border-white/10" dir="rtl">
+    <footer 
+      style={{
+        backgroundColor: isDark ? '#020617' : '#f8fafc',
+        color: isDark ? 'rgba(191, 219, 254, 0.8)' : '#334155',
+        borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1'
+      }}
+      className="relative w-full pt-28 pb-14 px-6 overflow-hidden border-t transition-colors duration-300"
+      dir="rtl"
+    >
       
-      {/* خلفية ضوئية جمالية */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[350px] bg-gradient-to-b from-[#002aff]/15 via-[#00bfff]/10 to-transparent rounded-full blur-[160px] pointer-events-none" />
+      {/* تأثيرات إضاءة الخلفية */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[350px] bg-blue-600/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute -bottom-10 right-10 w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10">
         
-        {/* شبكة البنتو الفخمة للفوتر */}
+        {/* القسم العلوي: الكارت الرئيسي ومعلومات المنصة + كارت الإحصائيات البديل */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
           
-          {/* الكارد الأول: البراند والنبذة ووسائل التواصل (يأخذ 6 أعمدة) */}
-          <div className="lg:col-span-6 bg-white/[0.02] border border-white/10 rounded-3xl p-8 backdrop-blur-2xl flex flex-col justify-between shadow-2xl relative overflow-hidden group">
-            <div className="absolute -inset-px rounded-3xl bg-gradient-to-r from-[#002aff]/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
+          {/* الكارد الأول: تفاصيل المنصة ومعلومات التواصل */}
+          <div 
+            style={{
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1'
+            }}
+            className="lg:col-span-7 border rounded-[32px] p-8 sm:p-10 backdrop-blur-2xl flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:border-blue-400/50 transition-all duration-300"
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-transparent" />
+            
             <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#002aff] to-[#00bfff] p-0.5 shadow-lg flex items-center justify-center">
-                  <div className="w-full h-full bg-[#050814] rounded-[14px] flex items-center justify-center text-white font-black text-xl">
-                    Z
+              <div className="flex items-start gap-4 mb-6">
+                {settings.logoUrl ? (
+                  <img src={settings.logoUrl} alt="Logo" className="w-14 h-14 rounded-2xl object-cover border border-blue-500/30 shadow-lg shrink-0" />
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl bg-blue-600 p-0.5 shadow-lg shadow-blue-600/30 flex items-center justify-center shrink-0">
+                    <div 
+                      style={{ backgroundColor: isDark ? '#020617' : '#f8fafc', color: isDark ? '#ffffff' : '#0f172a' }}
+                      className="w-full h-full rounded-[14px] flex items-center justify-center font-black text-2xl"
+                    >
+                      {settings.platformName.charAt(0)}
+                    </div>
                   </div>
+                )}
+                
+                <div className="flex flex-col">
+                  <span 
+                    style={{ color: isDark ? '#ffffff' : '#0f172a' }}
+                    className="text-3xl font-black leading-none mb-2"
+                  >
+                    {settings.platformName}
+                  </span>
+                  <span className="text-xs text-cyan-500 font-bold tracking-wider uppercase">
+                    تعلم . تطور . زد تفوقك
+                  </span>
                 </div>
-                <span className="text-3xl font-black bg-gradient-to-r from-white via-slate-200 to-[#38bdf8] bg-clip-text text-transparent">
-                  ZED<span className="text-[#00bfff]">.</span>
-                </span>
               </div>
 
-              <p className="text-slate-400 text-sm font-medium leading-relaxed mb-6">
-                منصة تعليمية متكاملة تهدف إلى تمكين الطلاب والمدرسين بأحدث وسائل التكنولوجيا والمناهج المتطورة لتحقيق التفوق الأكاديمي والمهني.
+              <p 
+                style={{ color: isDark ? 'rgba(224, 242, 254, 0.7)' : '#475569' }}
+                className="text-sm font-medium leading-relaxed mb-8 max-w-xl"
+              >
+                منصة تعليمية متكاملة تهدف إلى تمكين الطلاب والمدرسين بأحدث وسائل التكنولوجيا، والمناهج المتطورة، والملازم الحصرية لتحقيق أعلى معدلات التفوق الأكاديمي.
               </p>
 
-              <div className="space-y-2.5 mb-8 text-xs text-slate-400 font-medium">
-                <div className="flex items-center gap-2.5">
-                  <MapPin className="w-4 h-4 text-[#38bdf8] shrink-0" />
-                  <span>جمهورية مصر العربية، القاهرة</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Mail className="w-4 h-4 text-[#38bdf8] shrink-0" />
-                  <span>support@zed-platform.com</span>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-xs font-medium">
+                {settings.address && (
+                  <div 
+                    style={{
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#f8fafc',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#e2e8f0',
+                      color: isDark ? 'rgba(191, 219, 254, 0.8)' : '#334155'
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-2xl border shadow-sm"
+                  >
+                    <MapPin className="w-4 h-4 text-cyan-500 shrink-0" />
+                    <span className="truncate">{settings.address}</span>
+                  </div>
+                )}
+                {settings.email && (
+                  <div 
+                    style={{
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#f8fafc',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#e2e8f0',
+                      color: isDark ? 'rgba(191, 219, 254, 0.8)' : '#334155'
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-2xl border shadow-sm"
+                  >
+                    <Mail className="w-4 h-4 text-cyan-500 shrink-0" />
+                    <span className="truncate">{settings.email}</span>
+                  </div>
+                )}
+                {settings.phone && (
+                  <div 
+                    style={{
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#f8fafc',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#e2e8f0',
+                      color: isDark ? 'rgba(191, 219, 254, 0.8)' : '#334155'
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-2xl border sm:col-span-2 shadow-sm"
+                  >
+                    <Phone className="w-4 h-4 text-cyan-500 shrink-0" />
+                    <span>{settings.phone}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* أيقونات وسائل التواصل الاجتماعي */}
-            <div className="flex items-center gap-3 pt-6 border-t border-white/5">
-              {socialLinks.map((item, idx) => {
-                const Icon = item.icon;
-                return (
-                  <a
-                    key={idx}
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={item.name}
-                    className={`w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-300 shadow-md ${item.color}`}
+            {/* أيقونات السوشيال ميديا */}
+            <div 
+              style={{ borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1' }}
+              className="flex items-center gap-3 pt-6 border-t flex-wrap"
+            >
+              <span className="text-xs font-bold ml-2" style={{ color: isDark ? '#93c5fd' : '#475569' }}>تابعنا عبر:</span>
+              {activeSocialLinks.length > 0 ? (
+                activeSocialLinks.map((item, idx) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <a
+                      key={idx}
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={item.key}
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1',
+                        color: isDark ? '#bfdbfe' : '#334155'
+                      }}
+                      className="w-11 h-11 rounded-2xl border flex items-center justify-center hover:text-white hover:bg-blue-600 hover:border-blue-400 hover:scale-110 transition-all duration-300 shadow-sm"
+                    >
+                      <IconComponent className="w-4 h-4" />
+                    </a>
+                  );
+                })
+              ) : (
+                <span className="text-xs text-slate-400">لا توجد وسائل تواصل مضافة حالياً</span>
+              )}
+            </div>
+          </div>
+
+          {/* الكارد الثاني: مزايا الأمان والبيئة التعليمية */}
+          <div 
+            style={{
+              backgroundColor: isDark ? undefined : '#ffffff',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1'
+            }}
+            className={`lg:col-span-5 ${isDark ? 'bg-gradient-to-br from-blue-950/40 via-slate-900/60 to-slate-950' : 'bg-white'} border rounded-[32px] p-8 sm:p-10 backdrop-blur-2xl flex flex-col justify-between shadow-2xl relative overflow-hidden group hover:border-blue-400/50 transition-all duration-300`}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 text-xs font-bold mb-6">
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                <span>بيئة تعليمية موثوقة</span>
+              </div>
+              <h3 className="text-2xl font-black tracking-tight mb-4 leading-snug" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+                لماذا يختار الطلاب والمعلمون منصة <span className="text-cyan-500"> {settings.platformName}</span> ؟   
+              </h3>
+              <p 
+                style={{ color: isDark ? 'rgba(224, 242, 254, 0.7)' : '#475569' }}
+                className="text-xs sm:text-sm font-medium leading-relaxed mb-8"
+              >
+                نحن نمكنك من إدارة وتلقي المحتوى التعليمي بأعلى أداء تقني، مع حماية تامة للخصوصية وسرعة فائقة في التصفح.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div 
+                style={{
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'
+                }}
+                className="border p-4 rounded-2xl flex flex-col gap-1 shadow-sm"
+              >
+                <div className="flex items-center gap-2 text-cyan-500 mb-1">
+                  <BookOpen className="w-4 h-4" />
+                  <span className="text-xs font-bold">محتوى حصري</span>
+                </div>
+                <span className="text-[11px]" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>ملازم وفيديوهات بجودة عالية</span>
+              </div>
+              <div 
+                style={{
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'
+                }}
+                className="border p-4 rounded-2xl flex flex-col gap-1 shadow-sm"
+              >
+                <div className="flex items-center gap-2 text-blue-500 mb-1">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span className="text-xs font-bold">حماية كاملة</span>
+                </div>
+                <span className="text-[11px]" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>تأمين شامل لبيانات الحساب</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* روابط سريعة والسياسات القانونية */}
+        <div 
+          style={{ borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1' }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-10 py-10 border-t border-b mb-10"
+        >
+          
+          {/* روابط سريعة */}
+          <div 
+            style={{
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#ffffff',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#cbd5e1'
+            }}
+            className="space-y-4 border p-6 rounded-3xl shadow-sm"
+          >
+            <h4 className="font-bold text-base tracking-wide flex items-center gap-2.5" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+              <Globe2 className="w-4 h-4 text-cyan-500" />
+              <span>روابط سريعة للمنصة</span>
+            </h4>
+            <ul className="grid grid-cols-2 gap-2.5 text-sm font-medium">
+              {[
+                { name: 'الرئيسية', href: '/' },
+                { name: 'الكورسات', href: '/courses' },
+                { name: 'عن المنصة', href: '/about' },
+                { name: 'تواصل معنا', href: '/contact' },
+                { name: 'تسجيل الدخول', href: '/auth' }
+              ].map((item, idx) => (
+                <li key={idx}>
+                  <a 
+                    href={item.href} 
+                    style={{ color: isDark ? 'rgba(191, 219, 254, 0.7)' : '#475569' }}
+                    className="transition-colors flex items-center gap-2 group p-1.5 rounded-xl hover:bg-blue-500/10 hover:text-cyan-500"
                   >
-                    <Icon className="w-4 h-4" />
+                    <ArrowLeft className="w-3.5 h-3.5 text-cyan-500/50 group-hover:text-cyan-500 group-hover:-translate-x-1 transition-all" />
+                    <span>{item.name}</span>
                   </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* الدعم والسياسات القانونية */}
+          <div 
+            style={{
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#ffffff',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#cbd5e1'
+            }}
+            className="space-y-4 border p-6 rounded-3xl shadow-sm"
+          >
+            <h4 className="font-bold text-base tracking-wide flex items-center gap-2.5" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+              <ShieldAlert className="w-4 h-4 text-cyan-500" />
+              <span>الدعم والسياسات القانونية</span>
+            </h4>
+            <ul className="grid grid-cols-1 gap-2.5 text-sm font-medium">
+              {[
+                { name: 'سياسة الخصوصية وحماية البيانات', href: '/privacy-policy', icon: Lock },
+                { name: 'شروط الاستخدام والأحكام القانونية', href: '/terms-and-conditions', icon: FileText },
+                { name: 'مركز الدعم الفني والمساعدة', href: '/contact', icon: Phone }
+              ].map((item, idx) => {
+                const IconComponent = item.icon;
+                return (
+                  <li key={idx}>
+                    <a 
+                      href={item.href} 
+                      style={{
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#f8fafc',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#e2e8f0',
+                        color: isDark ? 'rgba(191, 219, 254, 0.7)' : '#475569'
+                      }}
+                      className="transition-colors flex items-center justify-between group p-2.5 rounded-xl border hover:bg-blue-500/10 hover:text-cyan-500"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <IconComponent className="w-4 h-4 text-cyan-500" />
+                        <span>{item.name}</span>
+                      </div>
+                      <ArrowLeft className="w-3.5 h-3.5 text-cyan-500/50 group-hover:text-cyan-500 group-hover:-translate-x-1 transition-all" />
+                    </a>
+                  </li>
                 );
               })}
-            </div>
-          </div>
-
-
-          {/* الكارد الثاني: القائمة البريدية والتفاعل (يأخذ 6 أعمدة) */}
-          <div className="lg:col-span-6 bg-white/[0.02] border border-white/10 rounded-3xl p-8 backdrop-blur-2xl flex flex-col justify-between shadow-2xl relative overflow-hidden group">
-            <div className="absolute -inset-px rounded-3xl bg-gradient-to-l from-[#00bfff]/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-            <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-[#38bdf8] text-xs font-bold mb-4">
-                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                <span>النشرة البريدية</span>
-              </div>
-              <h3 className="text-2xl font-black text-white tracking-tight mb-3">
-                كن أولاضمن <span className="bg-gradient-to-r from-[#00bfff] to-[#002aff] bg-clip-text text-transparent">المستفيدين والمتابعين</span>
-              </h3>
-              <p className="text-slate-400 text-xs sm:text-sm font-medium leading-relaxed mb-6">
-                احصل على التنبيهات حول الدورات الجديدة والمناهج والمقالات التعليمية مباشرة في بريدك.
-              </p>
-            </div>
-
-            <form onSubmit={(e) => e.preventDefault()} className="flex flex-col sm:flex-row gap-3">
-              <input 
-                type="email" 
-                placeholder="أدخل بريدك الإلكتروني..." 
-                className="flex-1 px-5 py-3.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-[#00bfff] transition-all"
-                required
-              />
-              <button 
-                type="submit"
-                className="px-6 py-3.5 bg-gradient-to-r from-[#002aff] to-[#00bfff] hover:opacity-90 text-white font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-[0_10px_25px_rgba(0,42,255,0.4)] cursor-pointer shrink-0"
-              >
-                <span>اشتراك</span>
-                <Send className="w-4 h-4 rotate-180" />
-              </button>
-            </form>
-          </div>
-
-        </div>
-
-
-        {/* صف الروابط السريعة المنظم */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 py-12 border-t border-b border-white/5 mb-10">
-          
-          {/* عمود الروابط السريعة */}
-          <div className="space-y-4">
-            <h4 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
-              <Globe2 className="w-4 h-4 text-[#38bdf8]" />
-              <span>روابط سريعة</span>
-            </h4>
-            <ul className="space-y-2.5 text-sm font-medium">
-              {['الرئيسية', 'المميزات الرئيسية', 'التخصصات الدراسية', 'كيف تعمل المنصة', 'آراء المستخدمين'].map((item, idx) => (
-                <li key={idx}>
-                  <a href="#link" className="text-slate-400 hover:text-[#38bdf8] transition-colors flex items-center gap-2 group">
-                    <ArrowLeft className="w-3.5 h-3.5 text-slate-600 group-hover:text-[#38bdf8] group-hover:-translate-x-1 transition-all" />
-                    <span>{item}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* عمود التصنيفات */}
-          <div className="space-y-4">
-            <h4 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#38bdf8]" />
-              <span>التصنيفات الدراسية</span>
-            </h4>
-            <ul className="space-y-2.5 text-sm font-medium">
-              {['البرمجة والتقنية', 'الرياضيات والمنطق', 'العلوم والفيزياء', 'اللغات والآداب', 'الذكاء الاصطناعي'].map((item, idx) => (
-                <li key={idx}>
-                  <a href="#link" className="text-slate-400 hover:text-[#38bdf8] transition-colors flex items-center gap-2 group">
-                    <ArrowLeft className="w-3.5 h-3.5 text-slate-600 group-hover:text-[#38bdf8] group-hover:-translate-x-1 transition-all" />
-                    <span>{item}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* عمود الدعم والمعلومات */}
-          <div className="space-y-4">
-            <h4 className="text-white font-bold text-base tracking-wide flex items-center gap-2">
-              <HelpCircle className="w-4 h-4 text-[#38bdf8]" />
-              <span>الدعم والمساعدة</span>
-            </h4>
-            <ul className="space-y-2.5 text-sm font-medium">
-              {['مركز المساعدة', 'الأسئلة الشائعة', 'سياسة الخصوصية', 'شروط الاستخدام', 'تواصل معنا'].map((item, idx) => (
-                <li key={idx}>
-                  <a href="#link" className="text-slate-400 hover:text-[#38bdf8] transition-colors flex items-center gap-2 group">
-                    <ArrowLeft className="w-3.5 h-3.5 text-slate-600 group-hover:text-[#38bdf8] group-hover:-translate-x-1 transition-all" />
-                    <span>{item}</span>
-                  </a>
-                </li>
-              ))}
             </ul>
           </div>
 
         </div>
 
-
-        {/* حقوق النشر والبيانات السفلية */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
-          <p>© {new Date().getFullYear()} منصة ZED التعليمية. كافة الحقوق محفوظة.</p>
+        {/* شريط حقوق النشر السفلي */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium" style={{ color: isDark ? 'rgba(191, 219, 254, 0.6)' : '#64748b' }}>
+          <p>© {new Date().getFullYear()} منصة {settings.platformName}. كافة الحقوق محفوظة.</p>
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1.5 text-slate-400">
-              <MapPin className="w-3.5 h-3.5 text-[#38bdf8]" />
-              <span>القاهرة، مصر</span>
+            <span 
+              style={{
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#ffffff',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1',
+                color: isDark ? '#ffffff' : '#0f172a'
+              }}
+              className="flex items-center gap-1.5 border px-4 py-2 rounded-xl shadow-sm"
+            >
+              <MapPin className="w-3.5 h-3.5 text-cyan-500" />
+              <span>{settings.address}</span>
             </span>
           </div>
         </div>

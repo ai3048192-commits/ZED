@@ -1,22 +1,45 @@
-import { Sun, Moon } from "lucide-react";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { HiOutlineSun, HiOutlineMoon } from 'react-icons/hi';
 
-type ThemeToggleProps = {
+interface ThemeToggleProps {
   isDark: boolean;
-  setIsDark: (val: boolean) => void;
-};
+  setIsDark: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
 export default function ThemeToggle({ isDark, setIsDark }: ThemeToggleProps) {
   return (
-    <button
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      whileHover={{ scale: 1.05 }}
       onClick={() => setIsDark(!isDark)}
-      className={`p-2.5 rounded-xl border transition-all duration-200 cursor-pointer ${
-        isDark
-          ? "bg-[#0D111C] border-[#1E273F] text-amber-400 hover:bg-[#151D33]"
-          : "bg-blue-50/70 border-blue-200 text-slate-700 hover:bg-blue-100"
+      className={`relative w-16 h-9 rounded-full p-1 transition-colors duration-500 cursor-pointer shadow-inner border ${
+        isDark 
+          ? 'bg-slate-900 border-slate-700 shadow-cyan-950/50' 
+          : 'bg-slate-200 border-slate-300 shadow-slate-300'
       }`}
-      aria-label="Toggle Theme"
+      type="button"
+      aria-label="تغيير الثيم"
     >
-      {isDark ? <Sun size={16} /> : <Moon size={16} className="text-blue-600" />}
-    </button>
+      {/* الدائرة المتحركة */}
+      <motion.div
+        layout
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
+          isDark 
+            ? 'bg-gradient-to-tr from-cyan-500 to-blue-600 text-slate-950' 
+            : 'bg-white text-amber-500'
+        }`}
+        style={{
+          x: isDark ? 0 : 28 // يتحكم في اتجاه الحركة (يتوافق مع الـ RTL)
+        }}
+      >
+        {isDark ? (
+          <HiOutlineMoon className="w-4 h-4 text-white" />
+        ) : (
+          <HiOutlineSun className="w-4 h-4 text-amber-500" />
+        )}
+      </motion.div>
+    </motion.button>
   );
 }
