@@ -140,7 +140,7 @@ export default function AuthPage({ isDark }) {
 
       // التوجيه للرابط المخصص حسب نوع الحساب الفعلي للمستخدم
       if (profileData?.role === "teacher") {
-        window.location.href = `http://zed-academy-admin.vercel.app/?userId=${userId}`;
+        window.location.href = `https://zed-academy-admin.vercel.app/?userId=${userId}`;
       } else {
         window.location.href = `https://student-admin-dashboard-nine.vercel.app/?userId=${userId}`;
       }
