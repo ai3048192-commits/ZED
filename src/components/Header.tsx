@@ -132,10 +132,10 @@ export default function ResponsiveHeader({ isAuthenticated, userRole, userName, 
 
             {!isAuthenticated ? (
               <div className="flex items-center gap-2.5">
-                <a href="/auth" className={`px-4 py-2 text-xs font-bold transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-700 hover:text-slate-900'}`}>
+                <a href="//login" className={`px-4 py-2 text-xs font-bold transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-700 hover:text-slate-900'}`}>
                   تسجيل الدخول
                 </a>
-                <a href="/auth?mode=register" className="px-5 py-2 text-xs font-black text-white bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl shadow-lg shadow-cyan-500/25 hover:opacity-90 transition-all border border-cyan-400/30">
+                <a href="//login?mode=register" className="px-5 py-2 text-xs font-black text-white bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl shadow-lg shadow-cyan-500/25 hover:opacity-90 transition-all border border-cyan-400/30">
                   حساب جديد
                 </a>
               </div>
