@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/teacher", "destination": "https://teacher-drab-five.vercel.app/" },
+    { "source": "/teacher/(.*)", "destination": "https://teacher-drab-five.vercel.app/$1" },
+    { "source": "/student", "destination": "https://student-ruby-six.vercel.app/" },
+    { "source": "/student/(.*)", "destination": "https://student-ruby-six.vercel.app/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
