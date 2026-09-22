@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   HiAcademicCap,
   HiArrowRight,
+  HiKey,
   HiOutlineEye,
   HiOutlineEyeOff,
   HiOutlineLockClosed,
@@ -46,15 +47,13 @@ const EMPTY_FORM: FormState = {
   role: "student",
 };
 
-// وجهات ما بعد تسجيل الدخول.
-//
-// تحذير مهم: لو المعلم والطالب في تطبيقين على origin مختلف (زي 5173 و 5174)،
-// جلسة Supabase بتتخزن في localStorage الخاص بكل origin لوحده، يعني الجلسة
-// مش بتنتقل وقت التحويل، والتطبيق التاني هيفتح وكأن محدش مسجّل دخول.
-// الحل الصح: تطبيق واحد وكل role بيروح لمسار جواه (/teacher و /student).
-// الـ env vars سايبها لو لسه محتاج التطبيقين منفصلين مؤقتاً.
+// أقل طول لكلمة المرور. 6 هو الحد الأدنى اللي Supabase بيقبله افتراضياً،
+// فمفيش أي شروط تانية (حروف كبيرة، أرقام، رموز) عشان التسجيل يبقى سهل.
+const MIN_PASSWORD = 6;
+
 const TEACHER_HOME = import.meta.env.VITE_TEACHER_HOME ?? "/teacher";
 const STUDENT_HOME = import.meta.env.VITE_STUDENT_HOME ?? "/student";
+
 /* ================================================================== */
 /*  Helpers                                                           */
 /* ================================================================== */
@@ -74,13 +73,11 @@ const authErrorMessage = (err: unknown): string => {
   if (code === "invalid_credentials") return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
   if (code === "email_not_confirmed") return "لم يُفعَّل بريدك بعد. افتح رسالة التفعيل في بريدك أولاً.";
   if (code === "user_already_exists") return "هذا البريد مسجّل بالفعل. جرّب تسجيل الدخول.";
-  if (code === "weak_password") return "كلمة المرور ضعيفة. استخدم حروفاً وأرقاماً ورموزاً.";
+  if (code === "weak_password") return `كلمة المرور قصيرة. استخدم ${MIN_PASSWORD} أحرف على الأقل.`;
   if (code === "over_email_send_rate_limit") return "تم إرسال رسائل كثيرة. انتظر دقيقة وحاول مرة أخرى.";
   return errorMessage(err);
 };
 
-// نوع الحساب بيتحدد في قاعدة البيانات مش في المتصفح.
-// بنقراه من profiles، و user_metadata مجرد احتياطي لو الصف لسه مأنشأش.
 async function resolveRole(userId: string): Promise<Role> {
   const { data, error } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
   if (!error && data?.role) return data.role === "teacher" ? "teacher" : "student";
@@ -90,7 +87,6 @@ async function resolveRole(userId: string): Promise<Role> {
 }
 
 function goToDashboard(role: Role) {
-  // replace بدل href عشان زرار الرجوع ميرجعش لصفحة الدخول بعد ما تدخل
   window.location.replace(role === "teacher" ? TEACHER_HOME : STUDENT_HOME);
 }
 
@@ -113,7 +109,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   const isSignup = mode === "signup";
   const isForgot = mode === "forgot";
 
-  /* ---------- إعدادات الهوية ---------- */
   useEffect(() => {
     let active = true;
     supabase
@@ -131,7 +126,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
     };
   }, []);
 
-  /* ---------- لو فيه جلسة شغالة، حوّل على طول ---------- */
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(async ({ data }) => {
@@ -153,7 +147,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  /* ---------- تسجيل الدخول ---------- */
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: form.email.trim(),
@@ -166,14 +159,13 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
     goToDashboard(await resolveRole(data.user.id));
   };
 
-  /* ---------- إنشاء حساب ---------- */
   const handleSignup = async () => {
     if (form.password !== form.confirmPassword) {
       setNotice({ type: "error", text: "كلمتا المرور غير متطابقتين!" });
       return;
     }
-    if (form.password.length < 8) {
-      setNotice({ type: "error", text: "كلمة المرور يجب أن تكون 8 أحرف على الأقل." });
+    if (form.password.length < MIN_PASSWORD) {
+      setNotice({ type: "error", text: `كلمة المرور لازم تكون ${MIN_PASSWORD} أحرف على الأقل.` });
       return;
     }
     if (form.role === "teacher" && !form.teacherCode.trim()) {
@@ -189,8 +181,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
           full_name: form.name.trim(),
           phone: form.phone.trim(),
           role: form.role,
-          // الكود بيتحقق منه في قاعدة البيانات، مش هنا.
-          // الـ trigger هو اللي بيقرر الـ role النهائي وبينشئ صف profiles.
           teacher_code: form.role === "teacher" ? form.teacherCode.trim() : null,
         },
       },
@@ -201,9 +191,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
       return;
     }
 
-    // لو تفعيل البريد مفعّل في Supabase، مفيش جلسة دلوقتي ولازم المستخدم
-    // يفتح رسالة التفعيل الأول. الكود القديم كان بيحوّله للداشبورد فوراً،
-    // فكان بيلاقي نفسه في صفحة فاضية.
     if (!data.session) {
       setNotice({
         type: "info",
@@ -224,7 +211,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
     goToDashboard(role);
   };
 
-  /* ---------- استعادة كلمة المرور ---------- */
   const handleForgot = async () => {
     if (stepForgot === 1) {
       const { error } = await supabase.auth.signInWithOtp({
@@ -244,8 +230,8 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
       setNotice({ type: "error", text: "كلمتا المرور غير متطابقتين!" });
       return;
     }
-    if (form.password.length < 8) {
-      setNotice({ type: "error", text: "كلمة المرور يجب أن تكون 8 أحرف على الأقل." });
+    if (form.password.length < MIN_PASSWORD) {
+      setNotice({ type: "error", text: `كلمة المرور لازم تكون ${MIN_PASSWORD} أحرف على الأقل.` });
       return;
     }
 
@@ -283,8 +269,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
       setLoading(false);
     }
   };
-
-  /* ---------- عناصر مشتركة ---------- */
 
   const labelClass = cx("mb-1.5 block text-[11px] font-bold", isDark ? "text-slate-300" : "text-slate-700");
   const inputClass = cx(
@@ -571,21 +555,23 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                 <label htmlFor="auth-otp" className={labelClass}>
                   كود التحقق
                 </label>
-                <input
-                  id="auth-otp"
-                  type="text"
-                  name="otpCode"
-                  required
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={form.otpCode}
-                  onChange={handleChange}
-                  placeholder="••••••"
-                  className={cx(
-                    "w-full rounded-2xl border px-3 py-3 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-blue-500 focus:outline-none",
-                    isDark ? "border-slate-800 bg-slate-900/50 text-white" : "border-slate-200 bg-slate-50 text-slate-900"
-                  )}
-                />
+                <IconField icon={<HiKey className="h-4 w-4" />}>
+                  <input
+                    id="auth-otp"
+                    type="text"
+                    name="otpCode"
+                    required
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={form.otpCode}
+                    onChange={handleChange}
+                    placeholder="••••••"
+                    className={cx(
+                      "w-full rounded-2xl border py-3 pl-3 pr-10 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-blue-500 focus:outline-none",
+                      isDark ? "border-slate-800 bg-slate-900/50 text-white" : "border-slate-200 bg-slate-50 text-slate-900"
+                    )}
+                  />
+                </IconField>
               </div>
             )}
 
@@ -614,7 +600,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     required
-                    minLength={isLogin ? undefined : 8}
+                    minLength={isLogin ? undefined : MIN_PASSWORD}
                     autoComplete={isLogin ? "current-password" : "new-password"}
                     value={form.password}
                     onChange={handleChange}
@@ -630,11 +616,14 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     {showPassword ? <HiOutlineEyeOff className="h-4 w-4" /> : <HiOutlineEye className="h-4 w-4" />}
                   </button>
                 </IconField>
+                {!isLogin && (
+                  <p className={cx("mt-1.5 text-[10px]", isDark ? "text-slate-500" : "text-slate-400")}>
+                    {MIN_PASSWORD} أحرف على الأقل، أي حروف أو أرقام.
+                  </p>
+                )}
               </div>
             )}
 
-            {/* تأكيد كلمة المرور: كان ناقص في إنشاء الحساب، فأي خطأ مطبعي
-                كان بيقفل الحساب على صاحبه */}
             {(isSignup || (isForgot && stepForgot === 2)) && (
               <div>
                 <label htmlFor="auth-confirm" className={labelClass}>
@@ -643,7 +632,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                 <IconField icon={<HiOutlineLockClosed className="h-4 w-4" />}>
                   <input
                     id="auth-confirm"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="confirmPassword"
                     required
                     autoComplete="new-password"
@@ -664,19 +653,24 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                 >
                   <HiOutlineShieldCheck className="h-4 w-4" /> كود تفعيل حساب المعلم
                 </label>
-                <input
-                  id="auth-code"
-                  type="text"
-                  name="teacherCode"
-                  required
-                  value={form.teacherCode}
-                  onChange={handleChange}
-                  placeholder="أدخل كود المعلمين السري"
-                  className={cx(
-                    "w-full rounded-xl border px-3 py-2.5 text-xs font-semibold focus:outline-none",
-                    isDark ? "border-amber-500/40 bg-slate-900 text-white" : "border-amber-500/40 bg-white text-slate-900"
-                  )}
-                />
+                <div className="relative">
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-amber-500/70">
+                    <HiOutlineShieldCheck className="h-4 w-4" />
+                  </span>
+                  <input
+                    id="auth-code"
+                    type="text"
+                    name="teacherCode"
+                    required
+                    value={form.teacherCode}
+                    onChange={handleChange}
+                    placeholder="أدخل كود المعلمين السري"
+                    className={cx(
+                      "w-full rounded-xl border py-2.5 pl-3 pr-10 text-xs font-semibold focus:outline-none",
+                      isDark ? "border-amber-500/40 bg-slate-900 text-white" : "border-amber-500/40 bg-white text-slate-900"
+                    )}
+                  />
+                </div>
               </div>
             )}
 
