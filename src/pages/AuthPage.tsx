@@ -323,9 +323,9 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
         <div className="flex flex-col justify-between space-y-6 lg:col-span-5 lg:border-l lg:border-slate-800/40 lg:pl-8">
           <div>
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-2xl font-black text-white shadow-xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-2xl font-black text-white shadow-xl p-2">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={platformName} className="h-full w-full object-cover" />
+                  <img src={logoUrl} alt={platformName} className="h-full w-full object-contain" />
                 ) : (
                   platformName.charAt(0) || "Z"
                 )}
