@@ -4,15 +4,16 @@ import { motion } from "framer-motion";
 import {
   HiAcademicCap,
   HiArrowRight,
+  HiCheckCircle,
   HiKey,
+  HiLockClosed,
+  HiMail,
   HiOutlineEye,
   HiOutlineEyeOff,
-  HiOutlineLockClosed,
-  HiOutlineMail,
-  HiOutlinePhone,
-  HiOutlineShieldCheck,
-  HiOutlineSparkles,
-  HiOutlineUser,
+  HiPhone,
+  HiShieldCheck,
+  HiSparkles,
+  HiUser,
   HiUserGroup,
 } from "react-icons/hi";
 import { supabase } from "../lib/supabaseClient";
@@ -257,17 +258,16 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
 
   const labelClass = cx("mb-1.5 block text-xs font-bold tracking-wide", isDark ? "text-slate-300" : "text-slate-700");
   
-  // تصميم حقول الإدخال مع ضبط الهوامش تماماً للأيقونات العربية (RTL)
   const inputClass = cx(
-    "w-full rounded-2xl border py-3.5 pr-11 pl-4 text-xs font-semibold transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none shadow-sm",
+    "w-full rounded-2xl border py-3.5 pr-12 pl-4 text-xs font-semibold transition-all duration-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 focus:outline-none shadow-sm",
     isDark
-      ? "border-slate-800 bg-slate-900/80 text-white placeholder-slate-500 hover:border-slate-700"
-      : "border-slate-200 bg-slate-50/80 text-slate-900 placeholder-slate-400 hover:border-slate-300"
+      ? "border-slate-800 bg-slate-900/90 text-white placeholder-slate-500 hover:border-slate-700"
+      : "border-slate-200 bg-white text-slate-900 placeholder-slate-400 hover:border-slate-300"
   );
 
   const IconField = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
     <div className="relative">
-      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-blue-500/70 transition-colors">
+      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-500 text-base">
         {icon}
       </span>
       {children}
@@ -285,43 +285,44 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   return (
     <div
       className={cx(
-        "relative flex min-h-screen w-full items-center justify-center overflow-hidden p-4 lg:p-8 transition-colors duration-700",
-        isDark ? "bg-[#070B14] text-white" : "bg-[#F4F7FE] text-slate-900"
+        "relative flex min-h-screen w-full items-center justify-center p-4 lg:p-6 transition-colors duration-700",
+        isDark ? "bg-[#050811] text-white" : "bg-[#F8FAFC] text-slate-900"
       )}
       dir="rtl"
     >
-      {/* خلفية تفاعلية بصرية فخمة */}
+      {/* خلفية ديناميكية متطورة */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-20 top-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-transparent blur-[160px]" />
-        <div className="absolute -left-20 bottom-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-tr from-violet-600/20 via-cyan-500/15 to-transparent blur-[160px]" />
+        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-indigo-600/20 to-blue-600/10 blur-[120px]" />
+        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-violet-600/20 to-pink-600/10 blur-[120px]" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 25, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         className={cx(
-          "relative z-10 grid w-full max-w-5xl grid-cols-1 items-center gap-10 rounded-[3rem] border p-6 shadow-2xl backdrop-blur-3xl transition-all duration-500 lg:grid-cols-12 lg:p-12",
+          "relative z-10 grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-[2.5rem] border shadow-2xl backdrop-blur-2xl lg:grid-cols-12",
           isDark
-            ? "border-slate-800/80 bg-slate-950/75 shadow-blue-950/30"
-            : "border-white/80 bg-white/85 shadow-blue-500/5"
+            ? "border-slate-800/80 bg-slate-950/85 shadow-indigo-950/20"
+            : "border-slate-200/80 bg-white/95 shadow-slate-200/60"
         )}
       >
-        {/* ------------------------- 1. نموذج الإدخال (اليمين) ------------------------- */}
-        <div className="lg:col-span-7">
-          <div className="mb-6 flex items-center justify-between gap-3">
-            <div>
-              <h2 className={cx("text-2xl font-black tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-                {isForgot ? "استعادة كلمة المرور" : isLogin ? "أهلاً بك مجدداً 👋" : "انضم إلينا الآن 🚀"}
-              </h2>
-              <p className={cx("mt-1.5 text-xs font-medium", isDark ? "text-slate-400" : "text-slate-500")}>
-                {isForgot ? "أدخل بريدك الإلكتروني لإرسال كود التحقق" : isLogin ? "سجل دخولك لمتابعة رحلتك التعليمية الممتعة" : "أنشئ حسابك الجديد وابدأ تفوقك الدراسي"}
-              </p>
+        {/* ------------------------- الجانب الأيمن: نموذج الدخول (Form) ------------------------- */}
+        <div className="flex flex-col justify-center p-6 sm:p-10 lg:col-span-7 lg:p-12">
+          <div className="mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1 text-[11px] font-bold text-indigo-500 mb-3">
+              <HiSparkles className="h-3.5 w-3.5" /> بوابة الأمان والاعتماد
             </div>
+            <h2 className={cx("text-2xl font-black tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+              {isForgot ? "استعادة كلمة المرور" : isLogin ? "مرحباً بك مجدداً!" : "إنشاء حساب جديد"}
+            </h2>
+            <p className={cx("mt-1 text-xs font-medium", isDark ? "text-slate-400" : "text-slate-500")}>
+              {isForgot ? "أدخل بريدك لاستلام كود التحقق السريع" : isLogin ? "أدخل بياناتك للانتقال إلى لوحة التحكم" : "سجل الآن وابدأ رحلة التفوق الدراسي"}
+            </p>
           </div>
 
           {!isForgot && (
-            <div className={cx("mb-6 grid grid-cols-2 rounded-2xl border p-1.5 shadow-inner", isDark ? "border-slate-800 bg-slate-900/60" : "border-slate-200/80 bg-slate-100")}>
+            <div className={cx("mb-6 grid grid-cols-2 rounded-2xl border p-1 shadow-inner", isDark ? "border-slate-800 bg-slate-900/50" : "border-slate-200 bg-slate-100")}>
               {(
                 [
                   ["login", "تسجيل الدخول"],
@@ -333,9 +334,9 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                   type="button"
                   onClick={() => switchMode(value)}
                   className={cx(
-                    "rounded-xl py-3 text-xs font-bold transition-all duration-300",
+                    "rounded-xl py-2.5 text-xs font-bold transition-all duration-300",
                     mode === value
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 scale-[1.02]"
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 scale-[1.02]"
                       : isDark
                         ? "text-slate-400 hover:text-white"
                         : "text-slate-600 hover:text-slate-900"
@@ -349,7 +350,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
 
           {notice && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
               role={notice.type === "error" ? "alert" : "status"}
               className={cx(
@@ -357,7 +358,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                 notice.type === "success"
                   ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                   : notice.type === "info"
-                    ? "border-blue-500/30 bg-blue-500/10 text-blue-500"
+                    ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-500"
                     : "border-rose-500/30 bg-rose-500/10 text-rose-500"
               )}
             >
@@ -369,7 +370,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             {isSignup && (
               <>
                 <div>
-                  <span className={labelClass}>نوع الحساب</span>
+                  <span className={labelClass}>حدد نوع الحساب</span>
                   <div role="radiogroup" aria-label="نوع الحساب" className="grid grid-cols-2 gap-3">
                     {(
                       [
@@ -386,13 +387,13 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                         className={cx(
                           "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-xs font-bold transition-all duration-300",
                           form.role === value
-                            ? "border-blue-500 bg-blue-500/10 text-blue-500 shadow-md shadow-blue-500/15 scale-[1.02]"
+                            ? "border-indigo-500 bg-indigo-500/10 text-indigo-500 shadow-sm shadow-indigo-500/10"
                             : isDark
                               ? "border-slate-800 bg-slate-900/40 text-slate-400 hover:bg-slate-900"
                               : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                         )}
                       >
-                        <Icon className="h-4 w-4" /> {label}
+                        <Icon className="text-base" /> {label}
                       </button>
                     ))}
                   </div>
@@ -401,7 +402,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label htmlFor="auth-name" className={labelClass}>الاسم الكامل</label>
-                    <IconField icon={<HiOutlineUser className="h-4 w-4" />}>
+                    <IconField icon={<HiUser />}>
                       <input
                         id="auth-name"
                         type="text"
@@ -417,7 +418,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                   </div>
                   <div>
                     <label htmlFor="auth-phone" className={labelClass}>رقم الهاتف</label>
-                    <IconField icon={<HiOutlinePhone className="h-4 w-4" />}>
+                    <IconField icon={<HiPhone />}>
                       <input
                         id="auth-phone"
                         type="tel"
@@ -440,7 +441,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             {(!isForgot || stepForgot === 1) && (
               <div>
                 <label htmlFor="auth-email" className={labelClass}>البريد الإلكتروني</label>
-                <IconField icon={<HiOutlineMail className="h-4 w-4" />}>
+                <IconField icon={<HiMail />}>
                   <input
                     id="auth-email"
                     type="email"
@@ -459,8 +460,8 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
 
             {isForgot && stepForgot === 2 && (
               <div>
-                <label htmlFor="auth-otp" className={labelClass}>كود التحقق</label>
-                <IconField icon={<HiKey className="h-4 w-4" />}>
+                <label htmlFor="auth-otp" className={labelClass}>كود التحقق المرسل</label>
+                <IconField icon={<HiKey />}>
                   <input
                     id="auth-otp"
                     type="text"
@@ -472,8 +473,8 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     onChange={handleChange}
                     placeholder="••••••"
                     className={cx(
-                      "w-full rounded-2xl border py-3.5 pr-11 pl-4 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-blue-500 focus:outline-none shadow-sm",
-                      isDark ? "border-slate-800 bg-slate-900/80 text-white" : "border-slate-200 bg-slate-50/80 text-slate-900"
+                      "w-full rounded-2xl border py-3.5 pr-12 pl-4 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-indigo-500 focus:outline-none shadow-sm",
+                      isDark ? "border-slate-800 bg-slate-900/90 text-white" : "border-slate-200 bg-white text-slate-900"
                     )}
                   />
                 </IconField>
@@ -488,15 +489,15 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     <button
                       type="button"
                       onClick={() => switchMode("forgot")}
-                      className="text-xs font-bold text-blue-500 hover:text-blue-400 transition-colors"
+                      className="text-xs font-bold text-indigo-500 hover:text-indigo-400 transition-colors"
                     >
                       نسيت كلمة المرور؟
                     </button>
                   )}
                 </div>
                 <div className="relative">
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-blue-500/70">
-                    <HiOutlineLockClosed className="h-4 w-4" />
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-500 text-base">
+                    <HiLockClosed />
                   </span>
                   <input
                     id="auth-password"
@@ -508,20 +509,20 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="••••••••"
-                    className={cx(inputClass, "pl-11")}
+                    className={cx(inputClass, "pl-12")}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                    className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 hover:text-blue-500 transition-colors"
+                    className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 hover:text-indigo-500 transition-colors"
                   >
-                    {showPassword ? <HiOutlineEyeOff className="h-4 w-4" /> : <HiOutlineEye className="h-4 w-4" />}
+                    {showPassword ? <HiOutlineEyeOff className="text-base" /> : <HiOutlineEye className="text-base" />}
                   </button>
                 </div>
                 {!isLogin && (
                   <p className={cx("mt-1.5 text-[11px] font-medium", isDark ? "text-slate-500" : "text-slate-400")}>
-                    يجب ألا تقل عن {MIN_PASSWORD} أحرف.
+                    الحد الأدنى {MIN_PASSWORD} أحرف.
                   </p>
                 )}
               </div>
@@ -530,7 +531,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             {(isSignup || (isForgot && stepForgot === 2)) && (
               <div>
                 <label htmlFor="auth-confirm" className={labelClass}>تأكيد كلمة المرور</label>
-                <IconField icon={<HiOutlineLockClosed className="h-4 w-4" />}>
+                <IconField icon={<HiLockClosed />}>
                   <input
                     id="auth-confirm"
                     type={showPassword ? "text" : "password"}
@@ -547,13 +548,13 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             )}
 
             {isSignup && form.role === "teacher" && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
                 <label htmlFor="auth-code" className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-amber-500">
-                  <HiOutlineShieldCheck className="h-4 w-4" /> كود تفعيل حساب المعلم
+                  <HiShieldCheck className="text-base" /> كود تفعيل حساب المعلم
                 </label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-amber-500/70">
-                    <HiOutlineShieldCheck className="h-4 w-4" />
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-amber-500 text-base">
+                    <HiShieldCheck />
                   </span>
                   <input
                     id="auth-code"
@@ -564,26 +565,27 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     onChange={handleChange}
                     placeholder="أدخل كود المعلمين السري"
                     className={cx(
-                      "w-full rounded-xl border py-3 pl-3 pr-10 text-xs font-bold focus:outline-none shadow-sm",
+                      "w-full rounded-xl border py-3 pl-3 pr-11 text-xs font-bold focus:outline-none shadow-sm",
                       isDark ? "border-amber-500/40 bg-slate-900 text-white" : "border-amber-500/40 bg-white text-slate-900"
                     )}
                   />
                 </div>
-              </motion.div>
+              </div>
             )}
 
+            {/* زر الإرسال مع أيقونة مناسبة للحدث */}
             <motion.button
               whileHover={{ scale: loading ? 1 : 1.01 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
               type="submit"
               disabled={loading}
-              className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 py-4 text-xs font-black tracking-wide text-white shadow-xl shadow-blue-600/30 transition-all hover:from-blue-500 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-violet-600 py-4 text-xs font-black tracking-wide text-white shadow-xl shadow-indigo-600/30 transition-all hover:from-indigo-500 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : (
                 <>
-                  <HiOutlineSparkles className="h-4 w-4 text-cyan-200" />
+                  <HiCheckCircle className="text-base text-cyan-200" />
                   {submitLabel}
                 </>
               )}
@@ -598,17 +600,23 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                   isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
                 )}
               >
-                <HiArrowRight className="h-4 w-4" /> العودة لتسجيل الدخول
+                <HiArrowRight className="text-base" /> العودة لتسجيل الدخول
               </button>
             )}
           </form>
         </div>
 
-        {/* ------------------------- 2. العمود التعريفي والجمالي (الشمال) ------------------------- */}
-        <div className="flex flex-col justify-between space-y-8 lg:col-span-5 lg:border-r lg:border-slate-800/20 lg:pr-10">
-          <div>
+        {/* ------------------------- الجانب الأيسر: اللوحة التعريفية البصرية (Branding Panel) ------------------------- */}
+        <div className={cx(
+          "relative flex flex-col justify-between overflow-hidden p-6 sm:p-10 lg:col-span-5 lg:p-12",
+          isDark ? "bg-slate-900/60 border-r border-slate-800" : "bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-950 text-white"
+        )}>
+          {/* تأثيرات خلفية بصرية داخل اللوحة */}
+          <div aria-hidden className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-indigo-500/20 blur-3xl" />
+          
+          <div className="relative z-10">
             <div className="mb-8 flex items-center gap-3.5">
-              <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-2xl font-black text-white shadow-xl shadow-blue-500/30">
+              <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-2xl font-black text-white shadow-xl shadow-indigo-500/30">
                 {logoUrl ? (
                   <img src={logoUrl} alt={platformName} className="h-full w-full object-cover" />
                 ) : (
@@ -616,31 +624,33 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                 )}
               </div>
               <div>
-                <span className={cx("block text-base font-black tracking-wider", isDark ? "text-white" : "text-slate-900")}>
+                <span className="block text-base font-black tracking-wider text-white">
                   {platformName}
                 </span>
-                <span className="text-xs font-bold text-blue-500">تعلم . تطور . زد تفوقك</span>
+                <span className="text-xs font-bold text-indigo-400">منصتك الأولى للتميز الأكاديمي</span>
               </div>
             </div>
 
-            <h1 className={cx("text-2xl font-black leading-snug tracking-tight lg:text-3xl", isDark ? "text-white" : "text-slate-900")}>
-              تجربة تعليمية استثنائية مصممة خصيصاً لتفوقك 🚀
+            <h1 className="text-2xl font-black leading-snug tracking-tight text-white lg:text-3xl">
+              ابدأ رحلة تفوقك التعليمي بأدوات ذكية ومبتكرة 🚀
             </h1>
-            <p className={cx("mt-4 text-xs font-medium leading-relaxed", isDark ? "text-slate-400" : "text-slate-500")}>
-              انتقل بمستواك الدراسي إلى آفاق جديدة كلياً مع أدوات تفاعلية متقدمة، اختبارات ذكية، ومتابعة لحظية دقيقة لمستواك.
+            <p className="mt-4 text-xs font-medium leading-relaxed text-slate-300">
+              انضم إلى آلاف الطلاب والمعلمين الذين يستمتعون بتجربة تعليمية سلسة، اختبارات تفاعلية، وتقارير أداء متقدمة لحظة بلحظة.
             </p>
           </div>
 
-          <div className={cx("rounded-3xl border p-5 shadow-sm backdrop-blur-md", isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-200/60 bg-slate-50/80")}>
-            <div className="flex items-center gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-xs font-black text-emerald-500 shadow-inner">
-                99%
-              </div>
-              <div>
-                <span className={cx("block text-xs font-black", isDark ? "text-slate-200" : "text-slate-800")}>
-                  نسبة رضا الطلاب المعتمدة
-                </span>
-                <span className="text-[11px] font-medium text-slate-400">آلاف الطلاب يحققون مراكز متقدمة معنا</span>
+          <div className="relative z-10 mt-8">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/20 text-xs font-black text-emerald-400">
+                  99%
+                </div>
+                <div>
+                  <span className="block text-xs font-black text-white">
+                    معدل رضا المتميزين
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-300">معايير تعليمية متطورة تلبي طموحاتك</span>
+                </div>
               </div>
             </div>
           </div>
