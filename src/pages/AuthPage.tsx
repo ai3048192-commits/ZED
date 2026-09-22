@@ -1,34 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   HiAcademicCap,
   HiArrowRight,
-  HiCheckCircle,
   HiKey,
-  HiLockClosed,
-  HiMail,
   HiOutlineEye,
   HiOutlineEyeOff,
-  HiOutlineX,
-  HiPhone,
-  HiShieldCheck,
-  HiSparkles,
-  HiUser,
+  HiOutlineLockClosed,
+  HiOutlineMail,
+  HiOutlinePhone,
+  HiOutlineShieldCheck,
+  HiOutlineSparkles,
+  HiOutlineUser,
   HiUserGroup,
 } from "react-icons/hi";
 import { supabase } from "../lib/supabaseClient";
 
+/* ================================================================== */
+/*  Types & constants                                                 */
+/* ================================================================== */
+
 type Role = "student" | "teacher";
 type Mode = "login" | "signup" | "forgot";
 type NoticeType = "success" | "error" | "info";
-
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialMode?: Mode;
-  isDark?: boolean;
-}
 
 interface FormState {
   name: string;
@@ -52,9 +47,16 @@ const EMPTY_FORM: FormState = {
   role: "student",
 };
 
+// أقل طول لكلمة المرور. 6 هو الحد الأدنى اللي Supabase بيقبله افتراضياً،
+// فمفيش أي شروط تانية (حروف كبيرة، أرقام، رموز) عشان التسجيل يبقى سهل.
 const MIN_PASSWORD = 6;
+
 const TEACHER_HOME = import.meta.env.VITE_TEACHER_HOME ?? "/teacher";
 const STUDENT_HOME = import.meta.env.VITE_STUDENT_HOME ?? "/student";
+
+/* ================================================================== */
+/*  Helpers                                                           */
+/* ================================================================== */
 
 const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
 
@@ -88,8 +90,12 @@ function goToDashboard(role: Role) {
   window.location.replace(role === "teacher" ? TEACHER_HOME : STUDENT_HOME);
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode = "login", isDark = false }: AuthModalProps) {
-  const [mode, setMode] = useState<Mode>(initialMode);
+/* ================================================================== */
+/*  Page                                                              */
+/* ================================================================== */
+
+export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
+  const [mode, setMode] = useState<Mode>("login");
   const [stepForgot, setStepForgot] = useState<1 | 2>(1);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -104,10 +110,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", isDa
   const isForgot = mode === "forgot";
 
   useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
-
-  useEffect(() => {
     let active = true;
     supabase
       .from("site_settings")
@@ -119,6 +121,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", isDa
         if (data[0].site_name) setPlatformName(data[0].site_name);
         if (data[0].logo_url) setLogoUrl(data[0].logo_url);
       });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!active || !data.session) return;
+      goToDashboard(await resolveRole(data.session.user.id));
+    });
     return () => {
       active = false;
     };
@@ -152,7 +165,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", isDa
       return;
     }
     if (form.password.length < MIN_PASSWORD) {
-      setNotice({ type: "error", text: `كلمة المرور يجب أن تكون ${MIN_PASSWORD} أحرف على الأقل.` });
+      setNotice({ type: "error", text: `كلمة المرور لازم تكون ${MIN_PASSWORD} أحرف على الأقل.` });
       return;
     }
     if (form.role === "teacher" && !form.teacherCode.trim()) {
@@ -181,7 +194,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", isDa
     if (!data.session) {
       setNotice({
         type: "info",
-        text: `تم إنشاء الحساب بنجاح. أرسلنا رسالة تفعيل إلى ${form.email.trim()}، يرجى فتحها ثم تسجيل الدخول.`,
+        text: `تم إنشاء الحساب. أرسلنا رسالة تفعيل إلى ${form.email.trim()}، افتحها ثم سجّل الدخول.`,
       });
       switchMode("login");
       return;
@@ -191,7 +204,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", isDa
     if (form.role === "teacher" && role !== "teacher") {
       setNotice({
         type: "error",
-        text: "كود تفعيل المعلم غير صحيح أو منتهي، وتم إنشاء الحساب كطالب. يرجى مراجعة الإدارة.",
+        text: "كود تفعيل المعلم غير صحيح أو منتهي، وتم إنشاء الحساب كطالب. راجع الإدارة لترقية حسابك.",
       });
       return;
     }
@@ -218,7 +231,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", isDa
       return;
     }
     if (form.password.length < MIN_PASSWORD) {
-      setNotice({ type: "error", text: `كلمة المرور يجب أن تكون ${MIN_PASSWORD} أحرف على الأقل.` });
+      setNotice({ type: "error", text: `كلمة المرور لازم تكون ${MIN_PASSWORD} أحرف على الأقل.` });
       return;
     }
 
@@ -257,18 +270,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", isDa
     }
   };
 
-  const labelClass = cx("mb-1.5 block text-xs font-bold tracking-wide", isDark ? "text-slate-300" : "text-slate-700");
-  
+  const labelClass = cx("mb-1.5 block text-[11px] font-bold", isDark ? "text-slate-300" : "text-slate-700");
   const inputClass = cx(
-    "w-full rounded-2xl border py-3 sm:py-3.5 pr-12 pl-4 text-xs font-semibold transition-all duration-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 focus:outline-none shadow-sm",
+    "w-full rounded-2xl border py-3 pl-3 pr-10 text-xs font-semibold transition-all focus:border-blue-500 focus:outline-none",
     isDark
-      ? "border-slate-800 bg-slate-900/90 text-white placeholder-slate-500 hover:border-slate-700"
-      : "border-slate-200 bg-white text-slate-900 placeholder-slate-400 hover:border-slate-300"
+      ? "border-slate-800 bg-slate-900/50 text-white placeholder-slate-600"
+      : "border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400"
   );
 
   const IconField = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
     <div className="relative">
-      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-500 text-base">
+      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
         {icon}
       </span>
       {children}
@@ -284,345 +296,416 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", isDa
       : "إنشاء الحساب";
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto" dir="rtl">
-          {/* الخلفية المعتمة والزجاجية مع تأثير انزلاق تدريجي */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-md"
-          />
+    <div
+      className={cx(
+        "relative flex min-h-screen w-full items-center justify-center overflow-hidden p-4 transition-colors duration-700 lg:p-8",
+        isDark ? "bg-[#02040A] text-white" : "bg-[#F1F5F9] text-slate-900"
+      )}
+      dir="rtl"
+    >
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-20 top-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-indigo-600/20 to-blue-600/15 blur-[160px]" />
+        <div className="absolute -left-20 bottom-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-violet-600/20 to-cyan-500/15 blur-[160px]" />
+      </div>
 
-          {/* نافذة المودال المنسدلة (Slide Down Dropdown Modal) */}
-          <motion.div
-            initial={{ opacity: 0, y: -40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={cx(
-              "relative z-10 w-full max-w-xl overflow-hidden rounded-[2.5rem] border shadow-2xl backdrop-blur-2xl my-8",
-              isDark
-                ? "border-slate-800/80 bg-slate-950/95 shadow-indigo-950/40 text-white"
-                : "border-slate-200/80 bg-white/95 shadow-indigo-500/10 text-slate-900"
-            )}
-          >
-            {/* زر الإغلاق العلوي الأنيق */}
-            <button
-              type="button"
-              onClick={onClose}
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className={cx(
+          "relative z-10 grid w-full max-w-4xl grid-cols-1 items-center gap-8 rounded-[3rem] border p-8 shadow-[0_40px_140px_rgba(0,0,0,0.25)] backdrop-blur-3xl transition-all duration-500 lg:grid-cols-12 lg:p-12",
+          isDark
+            ? "border-slate-800/80 bg-slate-950/70 shadow-indigo-950/40"
+            : "border-white bg-white/90 shadow-slate-300/60"
+        )}
+      >
+        {/* ------------------------- العمود التعريفي ------------------------- */}
+        <div className="flex flex-col justify-between space-y-6 lg:col-span-5 lg:border-l lg:border-slate-800/40 lg:pl-8">
+          <div>
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-2xl font-black text-white shadow-xl">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={platformName} className="h-full w-full object-cover" />
+                ) : (
+                  platformName.charAt(0) || "Z"
+                )}
+              </div>
+              <div>
+                <span
+                  className={cx("block text-sm font-black tracking-wider", isDark ? "text-white" : "text-slate-900")}
+                >
+                  {platformName}
+                </span>
+                <span className="flex items-center gap-1 text-xs font-bold text-blue-500">تعلم . تطور . زد تفوقك</span>
+              </div>
+            </div>
+
+            <h1
               className={cx(
-                "absolute left-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-2xl border transition-all duration-300",
-                isDark
-                  ? "border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800"
-                  : "border-slate-200 bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200"
+                "text-2xl font-black leading-snug tracking-tight lg:text-3xl",
+                isDark ? "text-white" : "text-slate-900"
               )}
             >
-              <HiOutlineX className="text-lg" />
-            </button>
+              تجربة تعليمية استثنائية مصممة خصيصاً لتتفوق.
+            </h1>
+            <p className={cx("mt-3 text-xs leading-relaxed", isDark ? "text-slate-400" : "text-slate-500")}>
+              انتقل بمستواك الدراسي إلى أفق جديدة كلياً مع أدوات تفاعلية، اختبارات ذكية، ومتابعة لحظية لا تقبل الهزيمة.
+            </p>
+          </div>
 
-            <div className="max-h-[85vh] overflow-y-auto p-6 sm:p-8">
-              <div className="mb-6 pr-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-[11px] font-bold text-indigo-500 mb-2.5">
-                  <HiSparkles className="h-3.5 w-3.5" /> بوابة الأمان والاعتماد
-                </div>
-                <h2 className={cx("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-slate-900")}>
-                  {isForgot ? "استعادة كلمة المرور" : isLogin ? "مرحباً بك مجدداً!" : "إنشاء حساب جديد"}
-                </h2>
-                <p className={cx("mt-1 text-xs font-medium", isDark ? "text-slate-400" : "text-slate-500")}>
-                  {isForgot ? "أدخل بريدك لاستلام كود التحقق السريع" : isLogin ? "أدخل بياناتك للانتقال إلى لوحة التحكم" : "سجل الآن وابدأ رحلة التفوق الدراسي"}
-                </p>
+          <div
+            className={cx(
+              "rounded-2xl border p-4",
+              isDark ? "border-slate-800/80 bg-slate-900/50" : "border-slate-200 bg-slate-50"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-xs font-bold text-emerald-500">
+                99%
               </div>
+              <div>
+                <span className={cx("block text-xs font-bold", isDark ? "text-slate-200" : "text-slate-800")}>
+                  نسبة نجاح الطلاب
+                </span>
+                <span className="text-[10px] text-slate-400">تقييمات معتمدة من آلاف المشتركين</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-              {!isForgot && (
-                <div className={cx("mb-6 grid grid-cols-2 rounded-2xl border p-1 shadow-inner", isDark ? "border-slate-800 bg-slate-900/50" : "border-slate-200 bg-slate-100")}>
-                  {(
-                    [
-                      ["login", "تسجيل الدخول"],
-                      ["signup", "حساب جديد"],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => switchMode(value)}
-                      className={cx(
-                        "rounded-xl py-2.5 text-xs font-bold transition-all duration-300",
-                        mode === value
-                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 scale-[1.02]"
-                          : isDark
-                            ? "text-slate-400 hover:text-white"
-                            : "text-slate-600 hover:text-slate-900"
-                      )}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+        {/* ------------------------- النموذج ------------------------- */}
+        <div className="lg:col-span-7">
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <div>
+              <h2
+                className={cx(
+                  "text-xl font-black tracking-tight lg:text-2xl",
+                  isDark ? "text-white" : "text-slate-900"
+                )}
+              >
+                {isForgot ? "استعادة كلمة المرور" : isLogin ? "تسجيل الدخول 👋" : "حساب جديد 🚀"}
+              </h2>
+              <p className={cx("mt-1 text-[11px]", isDark ? "text-slate-400" : "text-slate-500")}>
+                {isForgot
+                  ? "أدخل بريدك الإلكتروني أدناه"
+                  : isLogin
+                    ? "أدخل بيانات حسابك للمتابعة"
+                    : "أدخل تفاصيلك للانضمام الفوري"}
+              </p>
+            </div>
+            <div
+              className={cx(
+                "flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold",
+                isDark ? "border-slate-800 bg-slate-900 text-slate-300" : "border-slate-200 bg-slate-100 text-slate-600"
               )}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              متاحة الآن
+            </div>
+          </div>
 
-              {notice && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  role={notice.type === "error" ? "alert" : "status"}
+          {!isForgot && (
+            <div
+              className={cx(
+                "mb-6 grid grid-cols-2 rounded-2xl border p-1.5",
+                isDark ? "border-slate-800 bg-slate-900/80" : "border-slate-200 bg-slate-100"
+              )}
+            >
+              {(
+                [
+                  ["login", "تسجيل الدخول"],
+                  ["signup", "حساب جديد"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => switchMode(value)}
                   className={cx(
-                    "mb-5 rounded-2xl border px-4 py-3 text-xs font-bold leading-relaxed shadow-sm",
-                    notice.type === "success"
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-                      : notice.type === "info"
-                        ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-500"
-                        : "border-rose-500/30 bg-rose-500/10 text-rose-500"
+                    "rounded-xl py-2.5 text-xs font-bold transition-all duration-300",
+                    mode === value
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                      : isDark
+                        ? "text-slate-400 hover:text-white"
+                        : "text-slate-600 hover:text-slate-900"
                   )}
                 >
-                  {notice.text}
-                </motion.div>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {notice && (
+            <div
+              role={notice.type === "error" ? "alert" : "status"}
+              className={cx(
+                "mb-4 rounded-2xl border px-3.5 py-3 text-[11px] font-bold leading-relaxed",
+                notice.type === "success"
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                  : notice.type === "info"
+                    ? "border-blue-500/30 bg-blue-500/10 text-blue-500"
+                    : "border-rose-500/30 bg-rose-500/10 text-rose-500"
               )}
+            >
+              {notice.text}
+            </div>
+          )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {isSignup && (
-                  <>
-                    <div>
-                      <span className={labelClass}>حدد نوع الحساب</span>
-                      <div role="radiogroup" aria-label="نوع الحساب" className="grid grid-cols-2 gap-3">
-                        {(
-                          [
-                            ["student", "طالب", HiAcademicCap],
-                            ["teacher", "معلم", HiUserGroup],
-                          ] as const
-                        ).map(([value, label, Icon]) => (
-                          <button
-                            key={value}
-                            type="button"
-                            role="radio"
-                            aria-checked={form.role === value}
-                            onClick={() => setForm((prev) => ({ ...prev, role: value }))}
-                            className={cx(
-                              "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-xs font-bold transition-all duration-300",
-                              form.role === value
-                                ? "border-indigo-500 bg-indigo-500/10 text-indigo-500 shadow-sm shadow-indigo-500/10"
-                                : isDark
-                                  ? "border-slate-800 bg-slate-900/40 text-slate-400 hover:bg-slate-900"
-                                  : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                            )}
-                          >
-                            <Icon className="text-base" /> {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <div>
-                        <label htmlFor="auth-name" className={labelClass}>الاسم الكامل</label>
-                        <IconField icon={<HiUser />}>
-                          <input
-                            id="auth-name"
-                            type="text"
-                            name="name"
-                            required
-                            autoComplete="name"
-                            value={form.name}
-                            onChange={handleChange}
-                            placeholder="اسمك الكريم"
-                            className={inputClass}
-                          />
-                        </IconField>
-                      </div>
-                      <div>
-                        <label htmlFor="auth-phone" className={labelClass}>رقم الهاتف</label>
-                        <IconField icon={<HiPhone />}>
-                          <input
-                            id="auth-phone"
-                            type="tel"
-                            name="phone"
-                            required
-                            dir="ltr"
-                            inputMode="tel"
-                            autoComplete="tel"
-                            value={form.phone}
-                            onChange={handleChange}
-                            placeholder="01012345678"
-                            className={cx(inputClass, "text-right")}
-                          />
-                        </IconField>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {(!isForgot || stepForgot === 1) && (
-                  <div>
-                    <label htmlFor="auth-email" className={labelClass}>البريد الإلكتروني</label>
-                    <IconField icon={<HiMail />}>
-                      <input
-                        id="auth-email"
-                        type="email"
-                        name="email"
-                        required
-                        dir="ltr"
-                        autoComplete="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        placeholder="name@example.com"
-                        className={cx(inputClass, "text-right")}
-                      />
-                    </IconField>
-                  </div>
-                )}
-
-                {isForgot && stepForgot === 2 && (
-                  <div>
-                    <label htmlFor="auth-otp" className={labelClass}>كود التحقق المرسل</label>
-                    <IconField icon={<HiKey />}>
-                      <input
-                        id="auth-otp"
-                        type="text"
-                        name="otpCode"
-                        required
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        value={form.otpCode}
-                        onChange={handleChange}
-                        placeholder="••••••"
-                        className={cx(
-                          "w-full rounded-2xl border py-3.5 pr-12 pl-4 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-indigo-500 focus:outline-none shadow-sm",
-                          isDark ? "border-slate-800 bg-slate-900/90 text-white" : "border-slate-200 bg-white text-slate-900"
-                        )}
-                      />
-                    </IconField>
-                  </div>
-                )}
-
-                {(!isForgot || stepForgot === 2) && (
-                  <div>
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <label htmlFor="auth-password" className={labelClass}>كلمة المرور</label>
-                      {isLogin && (
-                        <button
-                          type="button"
-                          onClick={() => switchMode("forgot")}
-                          className="text-xs font-bold text-indigo-500 hover:text-indigo-400 transition-colors"
-                        >
-                          نسيت كلمة المرور؟
-                        </button>
-                      )}
-                    </div>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-500 text-base">
-                        <HiLockClosed />
-                      </span>
-                      <input
-                        id="auth-password"
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        required
-                        minLength={isLogin ? undefined : MIN_PASSWORD}
-                        autoComplete={isLogin ? "current-password" : "new-password"}
-                        value={form.password}
-                        onChange={handleChange}
-                        placeholder="••••••••"
-                        className={cx(inputClass, "pl-12")}
-                      />
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            {isSignup && (
+              <>
+                <div>
+                  <span className={labelClass}>نوع الحساب</span>
+                  <div role="radiogroup" aria-label="نوع الحساب" className="grid grid-cols-2 gap-3">
+                    {(
+                      [
+                        ["student", "طالب", HiAcademicCap],
+                        ["teacher", "مدرس", HiUserGroup],
+                      ] as const
+                    ).map(([value, label, Icon]) => (
                       <button
+                        key={value}
                         type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                        className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 hover:text-indigo-500 transition-colors"
+                        role="radio"
+                        aria-checked={form.role === value}
+                        onClick={() => setForm((prev) => ({ ...prev, role: value }))}
+                        className={cx(
+                          "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-xs font-bold transition-all",
+                          form.role === value
+                            ? "border-blue-500 bg-blue-500/10 text-blue-500"
+                            : isDark
+                              ? "border-slate-800 bg-slate-900/40 text-slate-400"
+                              : "border-slate-200 bg-slate-50 text-slate-600"
+                        )}
                       >
-                        {showPassword ? <HiOutlineEyeOff className="text-base" /> : <HiOutlineEye className="text-base" />}
+                        <Icon className="h-4 w-4" /> {label}
                       </button>
-                    </div>
-                    {!isLogin && (
-                      <p className={cx("mt-1.5 text-[11px] font-medium", isDark ? "text-slate-500" : "text-slate-400")}>
-                        الحد الأدنى {MIN_PASSWORD} أحرف.
-                      </p>
-                    )}
+                    ))}
                   </div>
-                )}
+                </div>
 
-                {(isSignup || (isForgot && stepForgot === 2)) && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="auth-confirm" className={labelClass}>تأكيد كلمة المرور</label>
-                    <IconField icon={<HiLockClosed />}>
+                    <label htmlFor="auth-name" className={labelClass}>
+                      الاسم الكامل
+                    </label>
+                    <IconField icon={<HiOutlineUser className="h-4 w-4" />}>
                       <input
-                        id="auth-confirm"
-                        type={showPassword ? "text" : "password"}
-                        name="confirmPassword"
+                        id="auth-name"
+                        type="text"
+                        name="name"
                         required
-                        autoComplete="new-password"
-                        value={form.confirmPassword}
+                        autoComplete="name"
+                        value={form.name}
                         onChange={handleChange}
-                        placeholder="••••••••"
+                        placeholder="اسمك الكامل"
                         className={inputClass}
                       />
                     </IconField>
                   </div>
-                )}
-
-                {isSignup && form.role === "teacher" && (
-                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
-                    <label htmlFor="auth-code" className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-amber-500">
-                      <HiShieldCheck className="text-base" /> كود تفعيل حساب المعلم
+                  <div>
+                    <label htmlFor="auth-phone" className={labelClass}>
+                      رقم الهاتف
                     </label>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-amber-500 text-base">
-                        <HiShieldCheck />
-                      </span>
+                    <IconField icon={<HiOutlinePhone className="h-4 w-4" />}>
                       <input
-                        id="auth-code"
-                        type="text"
-                        name="teacherCode"
+                        id="auth-phone"
+                        type="tel"
+                        name="phone"
                         required
-                        value={form.teacherCode}
+                        dir="ltr"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        value={form.phone}
                         onChange={handleChange}
-                        placeholder="أدخل كود المعلمين السري"
-                        className={cx(
-                          "w-full rounded-xl border py-3 pl-3 pr-11 text-xs font-bold focus:outline-none shadow-sm",
-                          isDark ? "border-amber-500/40 bg-slate-900 text-white" : "border-amber-500/40 bg-white text-slate-900"
-                        )}
+                        placeholder="01012345678"
+                        className={cx(inputClass, "text-right")}
                       />
-                    </div>
+                    </IconField>
                   </div>
-                )}
+                </div>
+              </>
+            )}
 
-                {/* زر الإرسال مع أيقونة مناسبة */}
-                <motion.button
-                  whileHover={{ scale: loading ? 1 : 1.01 }}
-                  whileTap={{ scale: loading ? 1 : 0.98 }}
-                  type="submit"
-                  disabled={loading}
-                  className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-violet-600 py-4 text-xs font-black tracking-wide text-white shadow-xl shadow-indigo-600/30 transition-all hover:from-indigo-500 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {loading ? (
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <>
-                      <HiCheckCircle className="text-base text-cyan-200" />
-                      {submitLabel}
-                    </>
+            {(!isForgot || stepForgot === 1) && (
+              <div>
+                <label htmlFor="auth-email" className={labelClass}>
+                  البريد الإلكتروني
+                </label>
+                <IconField icon={<HiOutlineMail className="h-4 w-4" />}>
+                  <input
+                    id="auth-email"
+                    type="email"
+                    name="email"
+                    required
+                    dir="ltr"
+                    autoComplete="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="name@example.com"
+                    className={cx(inputClass, "text-right")}
+                  />
+                </IconField>
+              </div>
+            )}
+
+            {isForgot && stepForgot === 2 && (
+              <div>
+                <label htmlFor="auth-otp" className={labelClass}>
+                  كود التحقق
+                </label>
+                <IconField icon={<HiKey className="h-4 w-4" />}>
+                  <input
+                    id="auth-otp"
+                    type="text"
+                    name="otpCode"
+                    required
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={form.otpCode}
+                    onChange={handleChange}
+                    placeholder="••••••"
+                    className={cx(
+                      "w-full rounded-2xl border py-3 pl-3 pr-10 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-blue-500 focus:outline-none",
+                      isDark ? "border-slate-800 bg-slate-900/50 text-white" : "border-slate-200 bg-slate-50 text-slate-900"
+                    )}
+                  />
+                </IconField>
+              </div>
+            )}
+
+            {(!isForgot || stepForgot === 2) && (
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label
+                    htmlFor="auth-password"
+                    className={cx("block text-[11px] font-bold", isDark ? "text-slate-300" : "text-slate-700")}
+                  >
+                    كلمة المرور
+                  </label>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      onClick={() => switchMode("forgot")}
+                      className="text-[11px] font-bold text-blue-500 hover:text-blue-400"
+                    >
+                      نسيت كلمة المرور؟
+                    </button>
                   )}
-                </motion.button>
-
-                {isForgot && (
+                </div>
+                <IconField icon={<HiOutlineLockClosed className="h-4 w-4" />}>
+                  <input
+                    id="auth-password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    required
+                    minLength={isLogin ? undefined : MIN_PASSWORD}
+                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    className={cx(inputClass, "pl-10")}
+                  />
                   <button
                     type="button"
-                    onClick={() => switchMode("login")}
-                    className={cx(
-                      "mt-3 flex w-full items-center justify-center gap-1.5 py-2 text-xs font-bold transition-colors",
-                      isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
-                    )}
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                    className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 hover:text-blue-500"
                   >
-                    <HiArrowRight className="text-base" /> العودة لتسجيل الدخول
+                    {showPassword ? <HiOutlineEyeOff className="h-4 w-4" /> : <HiOutlineEye className="h-4 w-4" />}
                   </button>
+                </IconField>
+                {!isLogin && (
+                  <p className={cx("mt-1.5 text-[10px]", isDark ? "text-slate-500" : "text-slate-400")}>
+                    {MIN_PASSWORD} أحرف على الأقل، أي حروف أو أرقام.
+                  </p>
                 )}
-              </form>
-            </div>
-          </motion.div>
+              </div>
+            )}
+
+            {(isSignup || (isForgot && stepForgot === 2)) && (
+              <div>
+                <label htmlFor="auth-confirm" className={labelClass}>
+                  تأكيد كلمة المرور
+                </label>
+                <IconField icon={<HiOutlineLockClosed className="h-4 w-4" />}>
+                  <input
+                    id="auth-confirm"
+                    type={showPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    required
+                    autoComplete="new-password"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    className={inputClass}
+                  />
+                </IconField>
+              </div>
+            )}
+
+            {isSignup && form.role === "teacher" && (
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5">
+                <label
+                  htmlFor="auth-code"
+                  className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-amber-500"
+                >
+                  <HiOutlineShieldCheck className="h-4 w-4" /> كود تفعيل حساب المعلم
+                </label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-amber-500/70">
+                    <HiOutlineShieldCheck className="h-4 w-4" />
+                  </span>
+                  <input
+                    id="auth-code"
+                    type="text"
+                    name="teacherCode"
+                    required
+                    value={form.teacherCode}
+                    onChange={handleChange}
+                    placeholder="أدخل كود المعلمين السري"
+                    className={cx(
+                      "w-full rounded-xl border py-2.5 pl-3 pr-10 text-xs font-semibold focus:outline-none",
+                      isDark ? "border-amber-500/40 bg-slate-900 text-white" : "border-amber-500/40 bg-white text-slate-900"
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            <motion.button
+              whileHover={{ scale: loading ? 1 : 1.01 }}
+              whileTap={{ scale: loading ? 1 : 0.99 }}
+              type="submit"
+              disabled={loading}
+              className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 py-3.5 text-xs font-black text-white shadow-xl shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? (
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <HiOutlineSparkles className="h-4 w-4 text-cyan-200" />
+                  {submitLabel}
+                </>
+              )}
+            </motion.button>
+
+            {isForgot && (
+              <button
+                type="button"
+                onClick={() => switchMode("login")}
+                className={cx(
+                  "mt-2 flex w-full items-center justify-center gap-1.5 py-2 text-xs font-bold",
+                  isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
+                )}
+              >
+                <HiArrowRight className="h-4 w-4" /> العودة لتسجيل الدخول
+              </button>
+            )}
+          </form>
         </div>
-      )}
-    </AnimatePresence>
+      </motion.div>
+    </div>
   );
 }
