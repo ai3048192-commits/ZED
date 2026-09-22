@@ -298,7 +298,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   return (
     <div
       className={cx(
-        "relative flex min-h-screen w-full items-center justify-center overflow-hidden p-4 transition-colors duration-700 lg:p-8",
+        "relative flex min-h-screen w-full items-start justify-center overflow-hidden px-4 pt-16 pb-12 transition-colors duration-700 lg:pt-24 lg:pb-16",
         isDark ? "bg-[#02040A] text-white" : "bg-[#F1F5F9] text-slate-900"
       )}
       dir="rtl"
