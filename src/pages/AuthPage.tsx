@@ -17,10 +17,6 @@ import {
 } from "react-icons/hi";
 import { supabase } from "../lib/supabaseClient";
 
-/* ================================================================== */
-/*  Types & constants                                                 */
-/* ================================================================== */
-
 type Role = "student" | "teacher";
 type Mode = "login" | "signup" | "forgot";
 type NoticeType = "success" | "error" | "info";
@@ -50,10 +46,6 @@ const EMPTY_FORM: FormState = {
 const MIN_PASSWORD = 6;
 const TEACHER_HOME = import.meta.env.VITE_TEACHER_HOME ?? "/teacher";
 const STUDENT_HOME = import.meta.env.VITE_STUDENT_HOME ?? "/student";
-
-/* ================================================================== */
-/*  Helpers                                                           */
-/* ================================================================== */
 
 const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
 
@@ -86,10 +78,6 @@ async function resolveRole(userId: string): Promise<Role> {
 function goToDashboard(role: Role) {
   window.location.replace(role === "teacher" ? TEACHER_HOME : STUDENT_HOME);
 }
-
-/* ================================================================== */
-/*  Page                                                              */
-/* ================================================================== */
 
 export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   const [mode, setMode] = useState<Mode>("login");
@@ -269,7 +257,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
 
   const labelClass = cx("mb-1.5 block text-xs font-semibold", isDark ? "text-slate-300" : "text-slate-700");
   const inputClass = cx(
-    "w-full rounded-2xl border py-3.5 pl-4 pr-11 text-xs font-medium transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none shadow-sm",
+    "w-full rounded-2xl border py-3.5 pr-11 pl-4 text-xs font-medium transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none shadow-sm",
     isDark
       ? "border-slate-800 bg-slate-900/60 text-white placeholder-slate-500"
       : "border-slate-200 bg-slate-50/70 text-slate-900 placeholder-slate-400"
@@ -300,7 +288,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
       )}
       dir="rtl"
     >
-      {/* خلفية جمالية متدرجة */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -right-20 top-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-blue-600/15 to-indigo-600/10 blur-[140px]" />
         <div className="absolute -left-20 bottom-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-violet-600/15 to-cyan-500/10 blur-[140px]" />
@@ -317,49 +304,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             : "border-slate-200/80 bg-white/90 shadow-slate-200/50"
         )}
       >
-        {/* العمود التعريفي */}
-        <div className="flex flex-col justify-between space-y-6 lg:col-span-5 lg:border-l lg:border-slate-800/20 lg:pl-8">
-          <div>
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-xl font-bold text-white shadow-lg shadow-blue-500/20">
-                {logoUrl ? (
-                  <img src={logoUrl} alt={platformName} className="h-full w-full object-cover" />
-                ) : (
-                  platformName.charAt(0) || "Z"
-                )}
-              </div>
-              <div>
-                <span className={cx("block text-sm font-bold tracking-wide", isDark ? "text-white" : "text-slate-900")}>
-                  {platformName}
-                </span>
-                <span className="text-xs font-medium text-blue-500">تعلم . تطور . زد تفوقك</span>
-              </div>
-            </div>
-
-            <h1 className={cx("text-xl font-extrabold leading-snug tracking-tight lg:text-2xl", isDark ? "text-white" : "text-slate-900")}>
-              تجربة تعليمية استثنائية مصممة خصيصاً لتفوقك.
-            </h1>
-            <p className={cx("mt-3 text-xs leading-relaxed", isDark ? "text-slate-400" : "text-slate-500")}>
-              انتقل بمستواه الدراسي إلى آفاق جديدة كلياً مع أدوات تفاعلية، اختبارات ذكية، ومتابعة لحظية دقيقة.
-            </p>
-          </div>
-
-          <div className={cx("rounded-2xl border p-4 shadow-sm", isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-100 bg-slate-50")}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-xs font-bold text-emerald-500">
-                99%
-              </div>
-              <div>
-                <span className={cx("block text-xs font-bold", isDark ? "text-slate-200" : "text-slate-800")}>
-                  نسبة رضا الطلاب
-                </span>
-                <span className="text-[10px] text-slate-400">تقييمات معتمدة من آلاف المتعلمين</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* نموذج الإدخال */}
+        {/* ------------------------- 1. نموذج الإدخال (يمين في الـ RTL) ------------------------- */}
         <div className="lg:col-span-7">
           <div className="mb-6 flex items-center justify-between gap-3">
             <div>
@@ -522,7 +467,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     onChange={handleChange}
                     placeholder="••••••"
                     className={cx(
-                      "w-full rounded-2xl border py-3.5 pl-4 pr-11 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-blue-500 focus:outline-none shadow-sm",
+                      "w-full rounded-2xl border py-3.5 pr-4 pl-4 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-blue-500 focus:outline-none shadow-sm",
                       isDark ? "border-slate-800 bg-slate-900/60 text-white" : "border-slate-200 bg-slate-50/70 text-slate-900"
                     )}
                   />
@@ -544,7 +489,10 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     </button>
                   )}
                 </div>
-                <IconField icon={<HiOutlineLockClosed className="h-4 w-4" />}>
+                <div className="relative">
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400">
+                    <HiOutlineLockClosed className="h-4 w-4" />
+                  </span>
                   <input
                     id="auth-password"
                     type={showPassword ? "text" : "password"}
@@ -555,7 +503,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="••••••••"
-                    className={cx(inputClass, "pl-11")}
+                    className={cx(inputClass, "pl-11 pr-11")}
                   />
                   <button
                     type="button"
@@ -565,7 +513,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                   >
                     {showPassword ? <HiOutlineEyeOff className="h-4 w-4" /> : <HiOutlineEye className="h-4 w-4" />}
                   </button>
-                </IconField>
+                </div>
                 {!isLogin && (
                   <p className={cx("mt-1 text-[11px]", isDark ? "text-slate-500" : "text-slate-400")}>
                     {MIN_PASSWORD} أحرف على الأقل.
@@ -649,6 +597,48 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
               </button>
             )}
           </form>
+        </div>
+
+        {/* ------------------------- 2. العمود التعريفي (يسار في الـ RTL) ------------------------- */}
+        <div className="flex flex-col justify-between space-y-6 lg:col-span-5 lg:border-r lg:border-slate-800/20 lg:pr-8">
+          <div>
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-xl font-bold text-white shadow-lg shadow-blue-500/20">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={platformName} className="h-full w-full object-cover" />
+                ) : (
+                  platformName.charAt(0) || "Z"
+                )}
+              </div>
+              <div>
+                <span className={cx("block text-sm font-bold tracking-wide", isDark ? "text-white" : "text-slate-900")}>
+                  {platformName}
+                </span>
+                <span className="text-xs font-medium text-blue-500">تعلم . تطور . زد تفوقك</span>
+              </div>
+            </div>
+
+            <h1 className={cx("text-xl font-extrabold leading-snug tracking-tight lg:text-2xl", isDark ? "text-white" : "text-slate-900")}>
+              تجربة تعليمية استثنائية مصممة خصيصاً لتفوقك.
+            </h1>
+            <p className={cx("mt-3 text-xs leading-relaxed", isDark ? "text-slate-400" : "text-slate-500")}>
+              انتقل بمستواك الدراسي إلى آفاق جديدة كلياً مع أدوات تفاعلية، اختبارات ذكية، ومتابعة لحظية دقيقة.
+            </p>
+          </div>
+
+          <div className={cx("rounded-2xl border p-4 shadow-sm", isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-100 bg-slate-50")}>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-xs font-bold text-emerald-500">
+                99%
+              </div>
+              <div>
+                <span className={cx("block text-xs font-bold", isDark ? "text-slate-200" : "text-slate-800")}>
+                  نسبة رضا الطلاب
+                </span>
+                <span className="text-[10px] text-slate-400">تقييمات معتمدة من آلاف المتعلمين</span>
+              </div>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>
