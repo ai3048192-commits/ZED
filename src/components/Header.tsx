@@ -24,7 +24,6 @@ export default function ResponsiveHeader({ isAuthenticated, userRole, userName, 
   const [currentPath, setCurrentPath] = useState('/');
   const [platformName, setPlatformName] = useState("Z E D");
   const [logoUrl, setLogoUrl] = useState("");
-  const [logoDarkUrl, setLogoDarkUrl] = useState(""); // شعار خاص بالوضع الليلي (اختياري)
   const [notificationsCount] = useState(2);
 
   useEffect(() => {
@@ -36,14 +35,13 @@ export default function ResponsiveHeader({ isAuthenticated, userRole, userName, 
       try {
         const { data, error } = await supabase
           .from("site_settings")
-          .select("site_name, logo_url, logo_dark_url") // تأكد من إضافة عمود logo_dark_url في قاعدة البيانات إذا أردت شعارين منفصلين
+          .select("site_name, logo_url")
           .order("id", { ascending: false })
           .limit(1);
 
         if (data && data.length > 0 && !error) {
           if (data[0].site_name) setPlatformName(data[0].site_name);
           if (data[0].logo_url) setLogoUrl(data[0].logo_url);
-          if (data[0].logo_dark_url) setLogoDarkUrl(data[0].logo_dark_url);
         }
       } catch (err) {
         console.error("خطأ في جلب إعدادات الهوية للـ Header:", err);
@@ -51,9 +49,6 @@ export default function ResponsiveHeader({ isAuthenticated, userRole, userName, 
     }
     fetchHeaderSettings();
   }, []);
-
-  // اختيار الشعار بناءً على الوضع الحالي (إذا لم يوجد شعار ليلي مخصص، سيظهر الشعار العادي بفلتر ألوان جمالي)
-  const activeLogo = isDark && logoDarkUrl ? logoDarkUrl : logoUrl;
 
   const navItems = [
     { name: 'الرئيسية', path: '/', icon: HiOutlineHome },
@@ -79,13 +74,9 @@ export default function ResponsiveHeader({ isAuthenticated, userRole, userName, 
         >
           <a href="/" className="group flex items-center gap-3">
             <div className="relative flex items-center">
-              {activeLogo ? (
-                /* هنا يتغير الشعار بحرية وبأعلى جودة مع إضافة تأثيرات بصرية إن أردت في الوضع الليلي */
-                <img 
-                    src={activeLogo} 
-                    alt="Logo" 
-                    className={`h-10 w-auto max-w-[150px] object-contain transition-all duration-300 ${isDark ? 'drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]' : ''}`} 
-                  />
+              {logoUrl ? (
+                /* تم إزالة المقاسات الثابتة w-10 h-10 وجعل العرض مرن والارتفاع محدد بحد أقصى لضمان عدم التشوه */
+                <img src={logoUrl} alt="Logo" className="h-10 w-auto max-w-[150px] object-contain rounded-xl" />
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg shadow-cyan-500/20 border border-cyan-400/30">
                   {platformName ? platformName.charAt(0) : 'Z'}
@@ -209,279 +200,279 @@ export default function ResponsiveHeader({ isAuthenticated, userRole, userName, 
               </div>
             </div>
           )}
-      </div>
-    </motion.div>
-    </header>
+        </div>
+      </motion.div>
+      </header>
 
-    {/* 2. تصميم هيدر الموبايل العلوي */}
-    <header className="fixed top-3 left-3 right-3 z-40 md:hidden" dir="rtl">
-      <div 
-        style={{
-          backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-          borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'
-        }}
-        className="backdrop-blur-2xl border px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between transition-colors duration-300"
-      >
-        <a href="/" className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center overflow-hidden">
-            {activeLogo ? (
-              <img src={activeLogo} alt="Logo" className="h-8 w-auto max-w-[120px] object-contain" />
-            ) : (
-              <div className="w-8 h-8 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-md shadow-cyan-500/20 border border-cyan-400/30">
-                {platformName ? platformName.charAt(0) : 'Z'}
-              </div>
-            )}
-          </div>
-          <span className="text-xs font-black tracking-wider" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>{platformName}</span>
-        </a>
+      {/* 2. تصميم هيدر الموبايل العلوي */}
+      <header className="fixed top-3 left-3 right-3 z-40 md:hidden" dir="rtl">
+        <div 
+          style={{
+            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'
+          }}
+          className="backdrop-blur-2xl border px-4 py-2.5 rounded-2xl shadow-md flex items-center justify-between transition-colors duration-300"
+        >
+          <a href="/" className="flex items-center gap-2.5">
+            <div className="flex items-center justify-center overflow-hidden">
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="h-8 w-auto max-w-[120px] object-contain" />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-md shadow-cyan-500/20 border border-cyan-400/30">
+                  {platformName ? platformName.charAt(0) : 'Z'}
+                </div>
+              )}
+            </div>
+            <span className="text-xs font-black tracking-wider" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>{platformName}</span>
+          </a>
 
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setIsDark(!isDark)}
-            style={{
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f1f5f9',
-              borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
-              color: isDark ? '#facc15' : '#0891b2'
-            }}
-            className="w-8 h-8 border rounded-xl flex items-center justify-center cursor-pointer"
-            type="button"
-          >
-            {isDark ? <HiOutlineSun className="w-3.5 h-3.5" /> : <HiOutlineMoon className="w-3.5 h-3.5" />}
-          </button>
-
-          {isAuthenticated && (
+          <div className="flex items-center gap-2">
             <button 
+              onClick={() => setIsDark(!isDark)}
               style={{
                 backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f1f5f9',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+                color: isDark ? '#facc15' : '#0891b2'
               }}
-              className="relative w-8 h-8 border rounded-xl flex items-center justify-center"
+              className="w-8 h-8 border rounded-xl flex items-center justify-center cursor-pointer"
+              type="button"
             >
-              <HiOutlineBell className="w-3.5 h-3.5 text-cyan-500" />
-              {notificationsCount > 0 && <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>}
+              {isDark ? <HiOutlineSun className="w-3.5 h-3.5" /> : <HiOutlineMoon className="w-3.5 h-3.5" />}
             </button>
-          )}
-
-          <button 
-            onClick={() => setIsMobileMenuOpen(true)}
-            style={{
-              backgroundColor: isDark ? 'rgba(6, 182, 212, 0.15)' : '#eff6ff',
-              borderColor: isDark ? 'rgba(6, 182, 212, 0.3)' : '#bfdbfe',
-              color: isDark ? '#67e8f9' : '#2563eb'
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 border rounded-xl font-bold text-xs"
-            type="button"
-          >
-            <HiOutlineMenuAlt3 className="w-4 h-4" />
-            <span>القائمة</span>
-          </button>
-        </div>
-      </div>
-    </header>
-
-    {/* 3. شريط التنقل السفلي للموبايل */}
-    <nav className="fixed bottom-4 left-4 right-4 z-40 md:hidden" dir="rtl">
-      <div 
-        style={{
-          backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          borderColor: isDark ? 'rgba(6, 182, 212, 0.2)' : '#e2e8f0'
-        }}
-        className="backdrop-blur-2xl border px-2 py-2 rounded-2xl shadow-xl flex items-center justify-between transition-colors duration-300"
-      >
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = currentPath === item.path;
-          return (
-            <a 
-              key={item.path} 
-              href={item.path} 
-              style={isActive ? {
-                backgroundColor: isDark ? 'rgba(6, 182, 212, 0.2)' : '#eff6ff',
-                borderColor: isDark ? 'rgba(6, 182, 212, 0.4)' : '#bfdbfe',
-                color: isDark ? '#67e8f9' : '#2563eb'
-              } : {}}
-              className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 relative border border-transparent ${
-                isActive 
-                  ? 'shadow-md font-black scale-105' 
-                  : isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-white/[0.03]' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-              }`}
-            >
-              <Icon className={`w-4 h-4 mb-1 ${isActive ? 'text-cyan-500' : isDark ? 'text-gray-400' : 'text-slate-500'}`} />
-              <span className="text-[10px] tracking-tight">{item.name}</span>
-              {isActive && (
-                <span className="absolute -bottom-1 w-1.5 h-1.5 bg-cyan-400 rounded-full"></span>
-              )}
-            </a>
-          );
-        })}
-      </div>
-    </nav>
-
-    {/* 4. القائمة المنبثقة من الأسفل للموبايل */}
-    <AnimatePresence>
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end" dir="rtl">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
-          />
-           
-          <motion.div 
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 220 }}
-            style={{
-              backgroundColor: isDark ? '#0f172a' : '#ffffff',
-              borderColor: isDark ? 'rgba(6, 182, 212, 0.3)' : '#e2e8f0'
-            }}
-            className="relative w-full border-t rounded-t-[2.5rem] p-6 space-y-5 shadow-2xl max-h-[85vh] overflow-y-auto transition-colors duration-300"
-          >
-            <div className="w-12 h-1.5 rounded-full mx-auto mb-1" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.2)' : '#cbd5e1' }}></div>
-
-            <div className="flex items-center justify-between pb-4 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-2xl flex items-center justify-center text-white font-black text-base shadow-lg shadow-cyan-500/20 border border-white/20 overflow-hidden">
-                  {activeLogo ? (
-                    <img src={activeLogo} alt="Logo" className="w-full h-full object-contain" />
-                  ) : (
-                    userName ? userName.charAt(0) : 'Z'
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-black text-sm" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>{userName || "زائر المنصة"}</span>
-                  <span className="text-[10px] text-cyan-500 font-bold flex items-center gap-1">
-                    <HiOutlineShieldCheck className="w-3.5 h-3.5" />
-                    {userRole === 'teacher' ? 'حساب محاضر معتمد' : 'حساب طالب نشط'}
-                  </span>
-                </div>
-              </div>
-               
-              <button 
-                onClick={() => setIsMobileMenuOpen(false)} 
-                style={{
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0',
-                  color: isDark ? '#94a3b8' : '#64748b'
-                }}
-                className="w-9 h-9 border rounded-2xl flex items-center justify-center transition-all cursor-pointer hover:text-rose-500"
-                type="button"
-              >
-                <HiOutlineX className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div 
-              style={{
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f1f5f9',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'
-              }}
-              className="flex items-center justify-between p-3.5 rounded-2xl border"
-            >
-              <span className="text-xs font-bold" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>المظهر ({isDark ? 'الوضع الليلي' : 'الوضع الفاتح'})</span>
-              <button 
-                onClick={() => setIsDark(!isDark)}
-                style={{
-                  backgroundColor: isDark ? 'rgba(6, 182, 212, 0.2)' : '#eff6ff',
-                  borderColor: isDark ? 'rgba(6, 182, 212, 0.3)' : '#bfdbfe',
-                  color: isDark ? '#67e8f9' : '#2563eb'
-                }}
-                className="px-4 py-2 border rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer"
-                type="button"
-              >
-                {isDark ? <HiOutlineSun className="w-4 h-4 text-amber-400" /> : <HiOutlineMoon className="w-4 h-4 text-cyan-600" />}
-                <span>تغيير</span>
-              </button>
-            </div>
 
             {isAuthenticated && (
-              <div className="grid grid-cols-2 gap-3">
-                <a 
-                  href={userRole === 'teacher' ? "/teacher/dashboard" : "/student/dashboard"} 
+              <button 
+                style={{
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f1f5f9',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'
+                }}
+                className="relative w-8 h-8 border rounded-xl flex items-center justify-center"
+              >
+                <HiOutlineBell className="w-3.5 h-3.5 text-cyan-500" />
+                {notificationsCount > 0 && <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>}
+              </button>
+            )}
+
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              style={{
+                backgroundColor: isDark ? 'rgba(6, 182, 212, 0.15)' : '#eff6ff',
+                borderColor: isDark ? 'rgba(6, 182, 212, 0.3)' : '#bfdbfe',
+                color: isDark ? '#67e8f9' : '#2563eb'
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 border rounded-xl font-bold text-xs"
+              type="button"
+            >
+              <HiOutlineMenuAlt3 className="w-4 h-4" />
+              <span>القائمة</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* 3. شريط التنقل السفلي للموبايل */}
+      <nav className="fixed bottom-4 left-4 right-4 z-40 md:hidden" dir="rtl">
+        <div 
+          style={{
+            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            borderColor: isDark ? 'rgba(6, 182, 212, 0.2)' : '#e2e8f0'
+          }}
+          className="backdrop-blur-2xl border px-2 py-2 rounded-2xl shadow-xl flex items-center justify-between transition-colors duration-300"
+        >
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPath === item.path;
+            return (
+              <a 
+                key={item.path} 
+                href={item.path} 
+                style={isActive ? {
+                  backgroundColor: isDark ? 'rgba(6, 182, 212, 0.2)' : '#eff6ff',
+                  borderColor: isDark ? 'rgba(6, 182, 212, 0.4)' : '#bfdbfe',
+                  color: isDark ? '#67e8f9' : '#2563eb'
+                } : {}}
+                className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-300 relative border border-transparent ${
+                  isActive 
+                    ? 'shadow-md font-black scale-105' 
+                    : isDark ? 'text-gray-400 hover:text-gray-200 hover:bg-white/[0.03]' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                }`}
+              >
+                <Icon className={`w-4 h-4 mb-1 ${isActive ? 'text-cyan-500' : isDark ? 'text-gray-400' : 'text-slate-500'}`} />
+                <span className="text-[10px] tracking-tight">{item.name}</span>
+                {isActive && (
+                  <span className="absolute -bottom-1 w-1.5 h-1.5 bg-cyan-400 rounded-full"></span>
+                )}
+              </a>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* 4. القائمة المنبثقة من الأسفل للموبايل */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end" dir="rtl">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            />
+             
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 220 }}
+              style={{
+                backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                borderColor: isDark ? 'rgba(6, 182, 212, 0.3)' : '#e2e8f0'
+              }}
+              className="relative w-full border-t rounded-t-[2.5rem] p-6 space-y-5 shadow-2xl max-h-[85vh] overflow-y-auto transition-colors duration-300"
+            >
+              <div className="w-12 h-1.5 rounded-full mx-auto mb-1" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.2)' : '#cbd5e1' }}></div>
+
+              <div className="flex items-center justify-between pb-4 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-2xl flex items-center justify-center text-white font-black text-base shadow-lg shadow-cyan-500/20 border border-white/20 overflow-hidden">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                    ) : (
+                      userName ? userName.charAt(0) : 'Z'
+                    )}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-black text-sm" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>{userName || "زائر المنصة"}</span>
+                    <span className="text-[10px] text-cyan-500 font-bold flex items-center gap-1">
+                      <HiOutlineShieldCheck className="w-3.5 h-3.5" />
+                      {userRole === 'teacher' ? 'حساب محاضر معتمد' : 'حساب طالب نشط'}
+                    </span>
+                  </div>
+                </div>
+                 
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)} 
                   style={{
-                    backgroundColor: isDark ? 'rgba(6, 182, 212, 0.15)' : '#eff6ff',
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0',
+                    color: isDark ? '#94a3b8' : '#64748b'
+                  }}
+                  className="w-9 h-9 border rounded-2xl flex items-center justify-center transition-all cursor-pointer hover:text-rose-500"
+                  type="button"
+                >
+                  <HiOutlineX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div 
+                style={{
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f1f5f9',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'
+                }}
+                className="flex items-center justify-between p-3.5 rounded-2xl border"
+              >
+                <span className="text-xs font-bold" style={{ color: isDark ? '#e2e8f0' : '#1e293b' }}>المظهر ({isDark ? 'الوضع الليلي' : 'الوضع الفاتح'})</span>
+                <button 
+                  onClick={() => setIsDark(!isDark)}
+                  style={{
+                    backgroundColor: isDark ? 'rgba(6, 182, 212, 0.2)' : '#eff6ff',
                     borderColor: isDark ? 'rgba(6, 182, 212, 0.3)' : '#bfdbfe',
                     color: isDark ? '#67e8f9' : '#2563eb'
                   }}
-                  className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border font-bold text-xs shadow-md"
-                >
-                  <HiOutlineViewGrid className="w-4 h-4" /> لوحة التحكم
-                </a>
-                <a 
-                  href="/profile" 
-                  style={{
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f1f5f9',
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
-                    color: isDark ? '#e2e8f0' : '#1e293b'
-                  }}
-                  className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border font-bold text-xs"
-                >
-                  <HiOutlineUser className="w-4 h-4 text-cyan-500" /> الملف الشخصي
-                </a>
-              </div>
-            )}
-
-            <div className="space-y-2 pt-1">
-              <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase px-1">القائمة الرئيسية</span>
-              <div className="grid grid-cols-2 gap-2.5">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = currentPath === item.path;
-                  return (
-                    <a 
-                      key={item.path} 
-                      href={item.path} 
-                      style={isActive ? {
-                        color: '#ffffff',
-                        background: 'linear-gradient(to bottom right, #2563eb, #0891b2)',
-                        borderColor: 'rgba(6, 182, 212, 0.4)'
-                      } : {
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#f8fafc',
-                        borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#e2e8f0',
-                        color: isDark ? '#d1d5db' : '#334155'
-                      }}
-                      className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl font-bold text-xs transition-all border shadow-lg"
-                    >
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isActive ? 'bg-white text-blue-600 dark:bg-cyan-500 dark:text-slate-950' : isDark ? 'bg-white/[0.05] text-cyan-400' : 'bg-slate-200 text-cyan-600'}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span>{item.name}</span>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="pt-3">
-              {isAuthenticated ? (
-                <button 
-                  onClick={() => { setIsMobileMenuOpen(false); onLogout(); }} 
-                  style={{
-                    backgroundColor: isDark ? 'rgba(244, 63, 94, 0.1)' : '#fff1f2',
-                    borderColor: isDark ? 'rgba(244, 63, 94, 0.2)' : '#fecdd3',
-                    color: isDark ? '#fb7185' : '#e11d48'
-                  }}
-                  className="w-full flex items-center justify-center gap-2.5 py-3.5 border rounded-2xl font-black text-xs transition-all shadow-md cursor-pointer"
+                  className="px-4 py-2 border rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer"
                   type="button"
                 >
-                  <HiOutlineLogout className="w-4 h-4" /> تسجيل الخروج من الحساب
+                  {isDark ? <HiOutlineSun className="w-4 h-4 text-amber-400" /> : <HiOutlineMoon className="w-4 h-4 text-cyan-600" />}
+                  <span>تغيير</span>
                 </button>
-              ) : (
-                <a 
-                  href="/auth" 
-                  className="w-full block text-center py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-black text-xs shadow-xl shadow-cyan-500/20 border border-cyan-400/30"
-                >
-                  تسجيل الدخول / إنشاء حساب جديد
-                </a>
+              </div>
+
+              {isAuthenticated && (
+                <div className="grid grid-cols-2 gap-3">
+                  <a 
+                    href={userRole === 'teacher' ? "/teacher/dashboard" : "/student/dashboard"} 
+                    style={{
+                      backgroundColor: isDark ? 'rgba(6, 182, 212, 0.15)' : '#eff6ff',
+                      borderColor: isDark ? 'rgba(6, 182, 212, 0.3)' : '#bfdbfe',
+                      color: isDark ? '#67e8f9' : '#2563eb'
+                    }}
+                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border font-bold text-xs shadow-md"
+                  >
+                    <HiOutlineViewGrid className="w-4 h-4" /> لوحة التحكم
+                  </a>
+                  <a 
+                    href="/profile" 
+                    style={{
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f1f5f9',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+                      color: isDark ? '#e2e8f0' : '#1e293b'
+                    }}
+                    className="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border font-bold text-xs"
+                  >
+                    <HiOutlineUser className="w-4 h-4 text-cyan-500" /> الملف الشخصي
+                  </a>
+                </div>
               )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
- </>
+
+              <div className="space-y-2 pt-1">
+                <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase px-1">القائمة الرئيسية</span>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentPath === item.path;
+                    return (
+                      <a 
+                        key={item.path} 
+                        href={item.path} 
+                        style={isActive ? {
+                          color: '#ffffff',
+                          background: 'linear-gradient(to bottom right, #2563eb, #0891b2)',
+                          borderColor: 'rgba(6, 182, 212, 0.4)'
+                        } : {
+                          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#f8fafc',
+                          borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#e2e8f0',
+                          color: isDark ? '#d1d5db' : '#334155'
+                        }}
+                        className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl font-bold text-xs transition-all border shadow-lg"
+                      >
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isActive ? 'bg-white text-blue-600 dark:bg-cyan-500 dark:text-slate-950' : isDark ? 'bg-white/[0.05] text-cyan-400' : 'bg-slate-200 text-cyan-600'}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span>{item.name}</span>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-3">
+                {isAuthenticated ? (
+                  <button 
+                    onClick={() => { setIsMobileMenuOpen(false); onLogout(); }} 
+                    style={{
+                      backgroundColor: isDark ? 'rgba(244, 63, 94, 0.1)' : '#fff1f2',
+                      borderColor: isDark ? 'rgba(244, 63, 94, 0.2)' : '#fecdd3',
+                      color: isDark ? '#fb7185' : '#e11d48'
+                    }}
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 border rounded-2xl font-black text-xs transition-all shadow-md cursor-pointer"
+                    type="button"
+                  >
+                    <HiOutlineLogout className="w-4 h-4" /> تسجيل الخروج من الحساب
+                  </button>
+                ) : (
+                  <a 
+                    href="/auth" 
+                    className="w-full block text-center py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-black text-xs shadow-xl shadow-cyan-500/20 border border-cyan-400/30"
+                  >
+                    تسجيل الدخول / إنشاء حساب جديد
+                  </a>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+  </>
   );
 }
