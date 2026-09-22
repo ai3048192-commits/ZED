@@ -47,8 +47,6 @@ const EMPTY_FORM: FormState = {
   role: "student",
 };
 
-// أقل طول لكلمة المرور. 6 هو الحد الأدنى اللي Supabase بيقبله افتراضياً،
-// فمفيش أي شروط تانية (حروف كبيرة، أرقام، رموز) عشان التسجيل يبقى سهل.
 const MIN_PASSWORD = 6;
 
 const TEACHER_HOME = import.meta.env.VITE_TEACHER_HOME ?? "/teacher";
@@ -270,17 +268,17 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
     }
   };
 
-  const labelClass = cx("mb-1.5 block text-[11px] font-bold", isDark ? "text-slate-300" : "text-slate-700");
+  const labelClass = cx("mb-1.5 block text-[11px] font-bold tracking-wide", isDark ? "text-slate-300" : "text-slate-700");
   const inputClass = cx(
-    "w-full rounded-2xl border py-3 pl-3 pr-10 text-xs font-semibold transition-all focus:border-blue-500 focus:outline-none",
+    "w-full rounded-2xl border py-3.5 pl-3.5 pr-11 text-xs font-semibold transition-all duration-300 focus:ring-2 focus:ring-blue-500/20 focus:outline-none shadow-sm",
     isDark
-      ? "border-slate-800 bg-slate-900/50 text-white placeholder-slate-600"
-      : "border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400"
+      ? "border-slate-800 bg-slate-900/60 text-white placeholder-slate-600 focus:border-blue-500"
+      : "border-slate-200/80 bg-white text-slate-900 placeholder-slate-400 focus:border-blue-600"
   );
 
   const IconField = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
-    <div className="relative">
-      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+    <div className="relative group">
+      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 transition-colors group-focus-within:text-blue-500">
         {icon}
       </span>
       {children}
@@ -299,44 +297,48 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
     <div
       className={cx(
         "relative flex min-h-screen w-full items-start justify-center overflow-hidden px-4 pt-16 pb-12 transition-colors duration-700 lg:pt-24 lg:pb-16",
-        isDark ? "bg-[#02040A] text-white" : "bg-[#F1F5F9] text-slate-900"
+        isDark ? "bg-[#050814] text-white" : "bg-gradient-to-br from-slate-100 via-blue-50/40 to-indigo-100/30 text-slate-900"
       )}
       dir="rtl"
     >
+      {/* خلفية جمالية تفاعلية */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -right-20 top-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-indigo-600/20 to-blue-600/15 blur-[160px]" />
-        <div className="absolute -left-20 bottom-1/4 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-violet-600/20 to-cyan-500/15 blur-[160px]" />
+        <div className="absolute -right-20 top-1/4 h-[550px] w-[550px] rounded-full bg-gradient-to-br from-blue-600/15 via-indigo-600/15 to-transparent blur-[140px]" />
+        <div className="absolute -left-20 bottom-1/4 h-[550px] w-[550px] rounded-full bg-gradient-to-tr from-violet-600/15 via-cyan-500/15 to-transparent blur-[140px]" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.98 }}
+        initial={{ opacity: 0, y: 35, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className={cx(
-          "relative z-10 grid w-full max-w-4xl grid-cols-1 items-center gap-8 rounded-[3rem] border p-8 shadow-[0_40px_140px_rgba(0,0,0,0.25)] backdrop-blur-3xl transition-all duration-500 lg:grid-cols-12 lg:p-12",
+          "relative z-10 grid w-full max-w-5xl grid-cols-1 items-stretch gap-10 rounded-[2.5rem] border p-8 shadow-2xl backdrop-blur-2xl transition-all duration-500 lg:grid-cols-12 lg:p-12",
           isDark
-            ? "border-slate-800/80 bg-slate-950/70 shadow-indigo-950/40"
-            : "border-white bg-white/90 shadow-slate-300/60"
+            ? "border-slate-800/80 bg-slate-950/80 shadow-indigo-950/30"
+            : "border-white/80 bg-white/80 shadow-blue-900/10"
         )}
       >
-        {/* ------------------------- العمود التعريفي ------------------------- */}
-        <div className="flex flex-col justify-between space-y-6 lg:col-span-5 lg:border-l lg:border-slate-800/40 lg:pl-8">
+        {/* ------------------------- العمود التعريفي الجانبي ------------------------- */}
+        <div className="flex flex-col justify-between space-y-6 lg:col-span-5 lg:border-l lg:border-slate-500/15 lg:pl-10">
           <div>
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-2xl font-black text-white shadow-xl p-2">
+            {/* الشعار بتصميم جديد وحجم غير مقيد */}
+            <div className="mb-8 flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 p-2 shadow-lg shadow-blue-600/25">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={platformName} className="h-full w-full object-contain" />
+                  <img src={logoUrl} alt={platformName} className="h-full w-full object-contain drop-shadow" />
                 ) : (
-                  platformName.charAt(0) || "Z"
+                  <span className="text-2xl font-black text-white">{platformName.charAt(0) || "Z"}</span>
                 )}
               </div>
               <div>
                 <span
-                  className={cx("block text-sm font-black tracking-wider", isDark ? "text-white" : "text-slate-900")}
+                  className={cx("block text-base font-black tracking-wide", isDark ? "text-white" : "text-slate-900")}
                 >
                   {platformName}
                 </span>
-                <span className="flex items-center gap-1 text-xs font-bold text-blue-500">تعلم . تطور . زد تفوقك</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-bold text-blue-500 mt-1">
+                  ✨ تعلم . تطور . زد تفوقك
+                </span>
               </div>
             </div>
 
@@ -348,33 +350,33 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             >
               تجربة تعليمية استثنائية مصممة خصيصاً لتتفوق.
             </h1>
-            <p className={cx("mt-3 text-xs leading-relaxed", isDark ? "text-slate-400" : "text-slate-500")}>
-              انتقل بمستواك الدراسي إلى أفق جديدة كلياً مع أدوات تفاعلية، اختبارات ذكية، ومتابعة لحظية لا تقبل الهزيمة.
+            <p className={cx("mt-3.5 text-xs leading-relaxed font-medium", isDark ? "text-slate-400" : "text-slate-600")}>
+              انتقل بمستواك الدراسي إلى أفق جديدة كلياً مع أدوات تفاعلية متطورة، اختبارات ذكية، ومتابعة لحظية دقيقة.
             </p>
           </div>
 
           <div
             className={cx(
-              "rounded-2xl border p-4",
-              isDark ? "border-slate-800/80 bg-slate-900/50" : "border-slate-200 bg-slate-50"
+              "rounded-2xl border p-4 shadow-sm",
+              isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-200/60 bg-white"
             )}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-xs font-bold text-emerald-500">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-xs font-black text-emerald-500">
                 99%
               </div>
               <div>
                 <span className={cx("block text-xs font-bold", isDark ? "text-slate-200" : "text-slate-800")}>
-                  نسبة نجاح الطلاب
+                  نسبة نجاح الطلاب المعتمدة
                 </span>
-                <span className="text-[10px] text-slate-400">تقييمات معتمدة من آلاف المشتركين</span>
+                <span className="text-[11px] text-slate-400">انضم لألاف الطلاب المتفوقين الآن</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ------------------------- النموذج ------------------------- */}
-        <div className="lg:col-span-7">
+        {/* ------------------------- النموذج الأساسي ------------------------- */}
+        <div className="lg:col-span-7 flex flex-col justify-center">
           <div className="mb-6 flex items-center justify-between gap-3">
             <div>
               <h2
@@ -383,32 +385,23 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                   isDark ? "text-white" : "text-slate-900"
                 )}
               >
-                {isForgot ? "استعادة كلمة المرور" : isLogin ? "تسجيل الدخول 👋" : "حساب جديد 🚀"}
+                {isForgot ? "استعادة كلمة المرور" : isLogin ? "أهلاً بك مجدداً 👋" : "إنشاء حساب جديد 🚀"}
               </h2>
-              <p className={cx("mt-1 text-[11px]", isDark ? "text-slate-400" : "text-slate-500")}>
+              <p className={cx("mt-1 text-[11px] font-medium", isDark ? "text-slate-400" : "text-slate-500")}>
                 {isForgot
-                  ? "أدخل بريدك الإلكتروني أدناه"
+                  ? "أدخل بريدك الإلكتروني لاستلام كود التحقق"
                   : isLogin
-                    ? "أدخل بيانات حسابك للمتابعة"
-                    : "أدخل تفاصيلك للانضمام الفوري"}
+                    ? "أدخل بيانات حسابك للمتابعة إلى لوحة التحكم"
+                    : "املأ التفاصيل التالية للانضمام الفوري"}
               </p>
-            </div>
-            <div
-              className={cx(
-                "flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold",
-                isDark ? "border-slate-800 bg-slate-900 text-slate-300" : "border-slate-200 bg-slate-100 text-slate-600"
-              )}
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              متاحة الآن
             </div>
           </div>
 
           {!isForgot && (
             <div
               className={cx(
-                "mb-6 grid grid-cols-2 rounded-2xl border p-1.5",
-                isDark ? "border-slate-800 bg-slate-900/80" : "border-slate-200 bg-slate-100"
+                "mb-6 grid grid-cols-2 rounded-2xl border p-1.5 shadow-sm",
+                isDark ? "border-slate-800 bg-slate-900/80" : "border-slate-200/80 bg-slate-100/70"
               )}
             >
               {(
@@ -424,7 +417,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                   className={cx(
                     "rounded-xl py-2.5 text-xs font-bold transition-all duration-300",
                     mode === value
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                       : isDark
                         ? "text-slate-400 hover:text-white"
                         : "text-slate-600 hover:text-slate-900"
@@ -440,7 +433,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             <div
               role={notice.type === "error" ? "alert" : "status"}
               className={cx(
-                "mb-4 rounded-2xl border px-3.5 py-3 text-[11px] font-bold leading-relaxed",
+                "mb-4 rounded-2xl border px-4 py-3 text-[11px] font-bold leading-relaxed shadow-sm",
                 notice.type === "success"
                   ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                   : notice.type === "info"
@@ -452,7 +445,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {isSignup && (
               <>
                 <div>
@@ -471,12 +464,12 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                         aria-checked={form.role === value}
                         onClick={() => setForm((prev) => ({ ...prev, role: value }))}
                         className={cx(
-                          "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-xs font-bold transition-all",
+                          "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-xs font-bold transition-all shadow-sm",
                           form.role === value
-                            ? "border-blue-500 bg-blue-500/10 text-blue-500"
+                            ? "border-blue-500 bg-blue-500/10 text-blue-500 ring-2 ring-blue-500/20"
                             : isDark
-                              ? "border-slate-800 bg-slate-900/40 text-slate-400"
-                              : "border-slate-200 bg-slate-50 text-slate-600"
+                              ? "border-slate-800 bg-slate-900/40 text-slate-400 hover:bg-slate-900"
+                              : "border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50"
                         )}
                       >
                         <Icon className="h-4 w-4" /> {label}
@@ -485,7 +478,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                   <div>
                     <label htmlFor="auth-name" className={labelClass}>
                       الاسم الكامل
@@ -567,8 +560,8 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     onChange={handleChange}
                     placeholder="••••••"
                     className={cx(
-                      "w-full rounded-2xl border py-3 pl-3 pr-10 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-blue-500 focus:outline-none",
-                      isDark ? "border-slate-800 bg-slate-900/50 text-white" : "border-slate-200 bg-slate-50 text-slate-900"
+                      "w-full rounded-2xl border py-3.5 pl-3.5 pr-11 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-blue-500 focus:outline-none shadow-sm",
+                      isDark ? "border-slate-800 bg-slate-900/60 text-white" : "border-slate-200/80 bg-white text-slate-900"
                     )}
                   />
                 </IconField>
@@ -578,17 +571,14 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             {(!isForgot || stepForgot === 2) && (
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <label
-                    htmlFor="auth-password"
-                    className={cx("block text-[11px] font-bold", isDark ? "text-slate-300" : "text-slate-700")}
-                  >
+                  <label htmlFor="auth-password" className={labelClass}>
                     كلمة المرور
                   </label>
                   {isLogin && (
                     <button
                       type="button"
                       onClick={() => switchMode("forgot")}
-                      className="text-[11px] font-bold text-blue-500 hover:text-blue-400"
+                      className="text-[11px] font-bold text-blue-500 hover:text-blue-400 transition-colors"
                     >
                       نسيت كلمة المرور؟
                     </button>
@@ -605,20 +595,20 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="••••••••"
-                    className={cx(inputClass, "pl-10")}
+                    className={cx(inputClass, "pl-11")}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                    className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 hover:text-blue-500"
+                    className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 hover:text-blue-500 transition-colors"
                   >
                     {showPassword ? <HiOutlineEyeOff className="h-4 w-4" /> : <HiOutlineEye className="h-4 w-4" />}
                   </button>
                 </IconField>
                 {!isLogin && (
-                  <p className={cx("mt-1.5 text-[10px]", isDark ? "text-slate-500" : "text-slate-400")}>
-                    {MIN_PASSWORD} أحرف على الأقل، أي حروف أو أرقام.
+                  <p className={cx("mt-1.5 text-[10px] font-medium", isDark ? "text-slate-500" : "text-slate-400")}>
+                    {MIN_PASSWORD} أحرف على الأقل.
                   </p>
                 )}
               </div>
@@ -646,15 +636,15 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             )}
 
             {isSignup && form.role === "teacher" && (
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5">
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 shadow-sm">
                 <label
                   htmlFor="auth-code"
-                  className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-amber-500"
+                  className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-amber-500"
                 >
                   <HiOutlineShieldCheck className="h-4 w-4" /> كود تفعيل حساب المعلم
                 </label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-amber-500/70">
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-amber-500/70">
                     <HiOutlineShieldCheck className="h-4 w-4" />
                   </span>
                   <input
@@ -666,7 +656,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     onChange={handleChange}
                     placeholder="أدخل كود المعلمين السري"
                     className={cx(
-                      "w-full rounded-xl border py-2.5 pl-3 pr-10 text-xs font-semibold focus:outline-none",
+                      "w-full rounded-xl border py-3 pl-3 pr-11 text-xs font-semibold focus:outline-none shadow-sm",
                       isDark ? "border-amber-500/40 bg-slate-900 text-white" : "border-amber-500/40 bg-white text-slate-900"
                     )}
                   />
@@ -679,7 +669,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
               whileTap={{ scale: loading ? 1 : 0.99 }}
               type="submit"
               disabled={loading}
-              className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 py-3.5 text-xs font-black text-white shadow-xl shadow-blue-600/25 transition-all hover:from-blue-500 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 py-4 text-xs font-black text-white shadow-xl shadow-blue-600/30 transition-all hover:from-blue-500 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -696,7 +686,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                 type="button"
                 onClick={() => switchMode("login")}
                 className={cx(
-                  "mt-2 flex w-full items-center justify-center gap-1.5 py-2 text-xs font-bold",
+                  "mt-3 flex w-full items-center justify-center gap-1.5 py-2 text-xs font-bold transition-colors",
                   isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-slate-900"
                 )}
               >
