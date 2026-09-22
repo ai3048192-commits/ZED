@@ -259,7 +259,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   const labelClass = cx("mb-1.5 block text-xs font-bold tracking-wide", isDark ? "text-slate-300" : "text-slate-700");
   
   const inputClass = cx(
-    "w-full rounded-2xl border py-3.5 pr-12 pl-4 text-xs font-semibold transition-all duration-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 focus:outline-none shadow-sm",
+    "w-full rounded-2xl border py-3 sm:py-3.5 pr-12 pl-4 text-xs font-semibold transition-all duration-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 focus:outline-none shadow-sm",
     isDark
       ? "border-slate-800 bg-slate-900/90 text-white placeholder-slate-500 hover:border-slate-700"
       : "border-slate-200 bg-white text-slate-900 placeholder-slate-400 hover:border-slate-300"
@@ -285,15 +285,15 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   return (
     <div
       className={cx(
-        "relative flex min-h-screen w-full items-center justify-center p-4 lg:p-6 transition-colors duration-700",
+        "relative flex min-h-screen w-full items-center justify-center p-3 sm:p-4 lg:p-6 transition-colors duration-700 overflow-x-hidden",
         isDark ? "bg-[#050811] text-white" : "bg-[#F8FAFC] text-slate-900"
       )}
       dir="rtl"
     >
       {/* خلفية ديناميكية متطورة */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-indigo-600/20 to-blue-600/10 blur-[120px]" />
-        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-violet-600/20 to-pink-600/10 blur-[120px]" />
+        <div className="absolute -top-40 -right-40 h-[350px] w-[350px] sm:h-[500px] sm:w-[500px] rounded-full bg-gradient-to-br from-indigo-600/20 to-blue-600/10 blur-[120px]" />
+        <div className="absolute -bottom-40 -left-40 h-[350px] w-[350px] sm:h-[500px] sm:w-[500px] rounded-full bg-gradient-to-tr from-violet-600/20 to-pink-600/10 blur-[120px]" />
       </div>
 
       <motion.div
@@ -301,19 +301,19 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className={cx(
-          "relative z-10 grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-[2.5rem] border shadow-2xl backdrop-blur-2xl lg:grid-cols-12",
+          "relative z-10 grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] border shadow-2xl backdrop-blur-2xl lg:grid-cols-12",
           isDark
             ? "border-slate-800/80 bg-slate-950/85 shadow-indigo-950/20"
             : "border-slate-200/80 bg-white/95 shadow-slate-200/60"
         )}
       >
         {/* ------------------------- الجانب الأيمن: نموذج الدخول (Form) ------------------------- */}
-        <div className="flex flex-col justify-center p-6 sm:p-10 lg:col-span-7 lg:p-12">
-          <div className="mb-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-3 py-1 text-[11px] font-bold text-indigo-500 mb-3">
+        <div className="flex flex-col justify-center p-5 sm:p-8 lg:col-span-7 lg:p-12">
+          <div className="mb-5 sm:mb-6">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-[11px] font-bold text-indigo-500 mb-2.5">
               <HiSparkles className="h-3.5 w-3.5" /> بوابة الأمان والاعتماد
             </div>
-            <h2 className={cx("text-2xl font-black tracking-tight", isDark ? "text-white" : "text-slate-900")}>
+            <h2 className={cx("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-slate-900")}>
               {isForgot ? "استعادة كلمة المرور" : isLogin ? "مرحباً بك مجدداً!" : "إنشاء حساب جديد"}
             </h2>
             <p className={cx("mt-1 text-xs font-medium", isDark ? "text-slate-400" : "text-slate-500")}>
@@ -322,7 +322,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
           </div>
 
           {!isForgot && (
-            <div className={cx("mb-6 grid grid-cols-2 rounded-2xl border p-1 shadow-inner", isDark ? "border-slate-800 bg-slate-900/50" : "border-slate-200 bg-slate-100")}>
+            <div className={cx("mb-5 sm:mb-6 grid grid-cols-2 rounded-2xl border p-1 shadow-inner", isDark ? "border-slate-800 bg-slate-900/50" : "border-slate-200 bg-slate-100")}>
               {(
                 [
                   ["login", "تسجيل الدخول"],
@@ -354,7 +354,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
               animate={{ opacity: 1, y: 0 }}
               role={notice.type === "error" ? "alert" : "status"}
               className={cx(
-                "mb-5 rounded-2xl border px-4 py-3 text-xs font-bold leading-relaxed shadow-sm",
+                "mb-4 sm:mb-5 rounded-2xl border px-4 py-3 text-xs font-bold leading-relaxed shadow-sm",
                 notice.type === "success"
                   ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                   : notice.type === "info"
@@ -366,12 +366,12 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
             {isSignup && (
               <>
                 <div>
                   <span className={labelClass}>حدد نوع الحساب</span>
-                  <div role="radiogroup" aria-label="نوع الحساب" className="grid grid-cols-2 gap-3">
+                  <div role="radiogroup" aria-label="نوع الحساب" className="grid grid-cols-2 gap-2.5 sm:gap-3">
                     {(
                       [
                         ["student", "طالب", HiAcademicCap],
@@ -385,7 +385,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                         aria-checked={form.role === value}
                         onClick={() => setForm((prev) => ({ ...prev, role: value }))}
                         className={cx(
-                          "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-xs font-bold transition-all duration-300",
+                          "flex items-center justify-center gap-2 rounded-2xl border px-3 sm:px-4 py-3 sm:py-3.5 text-xs font-bold transition-all duration-300",
                           form.role === value
                             ? "border-indigo-500 bg-indigo-500/10 text-indigo-500 shadow-sm shadow-indigo-500/10"
                             : isDark
@@ -473,7 +473,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     onChange={handleChange}
                     placeholder="••••••"
                     className={cx(
-                      "w-full rounded-2xl border py-3.5 pr-12 pl-4 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-indigo-500 focus:outline-none shadow-sm",
+                      "w-full rounded-2xl border py-3 sm:py-3.5 pr-12 pl-4 text-center text-sm font-bold tracking-[0.4em] transition-all focus:border-indigo-500 focus:outline-none shadow-sm",
                       isDark ? "border-slate-800 bg-slate-900/90 text-white" : "border-slate-200 bg-white text-slate-900"
                     )}
                   />
@@ -548,7 +548,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             )}
 
             {isSignup && form.role === "teacher" && (
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4">
                 <label htmlFor="auth-code" className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-amber-500">
                   <HiShieldCheck className="text-base" /> كود تفعيل حساب المعلم
                 </label>
@@ -565,7 +565,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     onChange={handleChange}
                     placeholder="أدخل كود المعلمين السري"
                     className={cx(
-                      "w-full rounded-xl border py-3 pl-3 pr-11 text-xs font-bold focus:outline-none shadow-sm",
+                      "w-full rounded-xl border py-2.5 sm:py-3 pl-3 pr-11 text-xs font-bold focus:outline-none shadow-sm",
                       isDark ? "border-amber-500/40 bg-slate-900 text-white" : "border-amber-500/40 bg-white text-slate-900"
                     )}
                   />
@@ -579,7 +579,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
               whileTap={{ scale: loading ? 1 : 0.98 }}
               type="submit"
               disabled={loading}
-              className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-violet-600 py-4 text-xs font-black tracking-wide text-white shadow-xl shadow-indigo-600/30 transition-all hover:from-indigo-500 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-4 sm:mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-violet-600 py-3.5 sm:py-4 text-xs font-black tracking-wide text-white shadow-xl shadow-indigo-600/30 transition-all hover:from-indigo-500 hover:to-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -608,15 +608,15 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
 
         {/* ------------------------- الجانب الأيسر: اللوحة التعريفية البصرية (Branding Panel) ------------------------- */}
         <div className={cx(
-          "relative flex flex-col justify-between overflow-hidden p-6 sm:p-10 lg:col-span-5 lg:p-12",
-          isDark ? "bg-slate-900/60 border-r border-slate-800" : "bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-950 text-white"
+          "relative flex flex-col justify-between overflow-hidden p-5 sm:p-8 lg:col-span-5 lg:p-12",
+          isDark ? "bg-slate-900/60 border-t lg:border-t-0 lg:border-r border-slate-800" : "bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-950 text-white border-t lg:border-t-0"
         )}>
           {/* تأثيرات خلفية بصرية داخل اللوحة */}
-          <div aria-hidden className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-indigo-500/20 blur-3xl" />
+          <div aria-hidden className="absolute -bottom-20 -left-20 h-40 w-40 sm:h-60 sm:w-60 rounded-full bg-indigo-500/20 blur-3xl" />
           
           <div className="relative z-10">
-            <div className="mb-8 flex items-center gap-3.5">
-              <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-2xl font-black text-white shadow-xl shadow-indigo-500/30">
+            <div className="mb-6 sm:mb-8 flex items-center gap-3">
+              <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-xl sm:text-2xl font-black text-white shadow-xl shadow-indigo-500/30">
                 {logoUrl ? (
                   <img src={logoUrl} alt={platformName} className="h-full w-full object-cover" />
                 ) : (
@@ -624,32 +624,32 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                 )}
               </div>
               <div>
-                <span className="block text-base font-black tracking-wider text-white">
+                <span className="block text-sm sm:text-base font-black tracking-wider text-white">
                   {platformName}
                 </span>
-                <span className="text-xs font-bold text-indigo-400">منصتك الأولى للتميز الأكاديمي</span>
+                <span className="text-[11px] sm:text-xs font-bold text-indigo-400">منصتك الأولى للتميز الأكاديمي</span>
               </div>
             </div>
 
-            <h1 className="text-2xl font-black leading-snug tracking-tight text-white lg:text-3xl">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black leading-snug tracking-tight text-white">
               ابدأ رحلة تفوقك التعليمي بأدوات ذكية ومبتكرة 🚀
             </h1>
-            <p className="mt-4 text-xs font-medium leading-relaxed text-slate-300">
+            <p className="mt-3 sm:mt-4 text-xs font-medium leading-relaxed text-slate-300">
               انضم إلى آلاف الطلاب والمعلمين الذين يستمتعون بتجربة تعليمية سلسة، اختبارات تفاعلية، وتقارير أداء متقدمة لحظة بلحظة.
             </p>
           </div>
 
-          <div className="relative z-10 mt-8">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-md shadow-lg">
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/20 text-xs font-black text-emerald-400">
+          <div className="relative z-10 mt-6 sm:mt-8">
+            <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-md shadow-lg">
+              <div className="flex items-center gap-3.5 sm:gap-4">
+                <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-emerald-500/20 text-xs font-black text-emerald-400">
                   99%
                 </div>
                 <div>
                   <span className="block text-xs font-black text-white">
                     معدل رضا المتميزين
                   </span>
-                  <span className="text-[11px] font-medium text-slate-300">معايير تعليمية متطورة تلبي طموحاتك</span>
+                  <span className="text-[10px] sm:text-[11px] font-medium text-slate-300">معايير تعليمية متطورة تلبي طموحاتك</span>
                 </div>
               </div>
             </div>
