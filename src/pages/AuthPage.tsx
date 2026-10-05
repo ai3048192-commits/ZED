@@ -10,10 +10,11 @@ import {
   HiOutlineLockClosed,
   HiOutlineMail,
   HiOutlinePhone,
-  HiOutlineShieldCheck,
   HiOutlineSparkles,
   HiOutlineUser,
   HiUserGroup,
+  HiCheck,
+  HiX,
 } from "react-icons/hi";
 import { supabase } from "../lib/supabaseClient";
 
@@ -32,7 +33,6 @@ interface FormState {
   password: string;
   confirmPassword: string;
   otpCode: string;
-  teacherCode: string;
   role: Role;
 }
 
@@ -43,12 +43,10 @@ const EMPTY_FORM: FormState = {
   password: "",
   confirmPassword: "",
   otpCode: "",
-  teacherCode: "",
   role: "student",
 };
 
-// أقل طول لكلمة المرور. 6 هو الحد الأدنى اللي Supabase بيقبله افتراضياً،
-// فمفيش أي شروط تانية (حروف كبيرة، أرقام، رموز) عشان التسجيل يبقى سهل.
+/* الحد الأدنى لطول كلمة المرور — سهّلناه عشان تكتبها بسرعة وتفتكرها */
 const MIN_PASSWORD = 6;
 
 const TEACHER_HOME = import.meta.env.VITE_TEACHER_HOME ?? "/teacher";
@@ -73,7 +71,7 @@ const authErrorMessage = (err: unknown): string => {
   if (code === "invalid_credentials") return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
   if (code === "email_not_confirmed") return "لم يُفعَّل بريدك بعد. افتح رسالة التفعيل في بريدك أولاً.";
   if (code === "user_already_exists") return "هذا البريد مسجّل بالفعل. جرّب تسجيل الدخول.";
-  if (code === "weak_password") return `كلمة المرور قصيرة. استخدم ${MIN_PASSWORD} أحرف على الأقل.`;
+  if (code === "weak_password") return "كلمة المرور قصيرة جداً. استخدم 6 أحرف على الأقل.";
   if (code === "over_email_send_rate_limit") return "تم إرسال رسائل كثيرة. انتظر دقيقة وحاول مرة أخرى.";
   return errorMessage(err);
 };
@@ -89,6 +87,17 @@ async function resolveRole(userId: string): Promise<Role> {
 function goToDashboard(role: Role) {
   window.location.replace(role === "teacher" ? TEACHER_HOME : STUDENT_HOME);
 }
+
+/* مهم: IconField معرّف هنا على مستوى الملف — لو اتحط جوه الكمبوننت
+   React بيعيد بناء الـ input كل حرف فيضيع الـ focus (البطء اللي كان بيحصل) */
+const IconField = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
+  <div className="relative">
+    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+      {icon}
+    </span>
+    {children}
+  </div>
+);
 
 /* ================================================================== */
 /*  Page                                                              */
@@ -108,6 +117,17 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   const isLogin = mode === "login";
   const isSignup = mode === "signup";
   const isForgot = mode === "forgot";
+
+  // قوة كلمة المرور — بسيطة ومرنة: الطول هو الأساس، الباقي اقتراحات مش شروط
+  const hasMinLength = form.password.length >= MIN_PASSWORD;
+  const hasNumber = /\d/.test(form.password);
+  const hasLetter = /[a-zA-Z؀-ۿ]/.test(form.password);
+  const isLong = form.password.length >= 10;
+
+  const passwordStrengthCount =
+    (hasMinLength ? 1 : 0) +
+    ((hasLetter && hasNumber) || isLong ? 1 : 0) +
+    (isLong && hasNumber ? 1 : 0);
 
   useEffect(() => {
     let active = true;
@@ -144,8 +164,10 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
     setForm((prev) => ({ ...prev, password: "", confirmPassword: "", otpCode: "" }));
   }, []);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -165,11 +187,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
       return;
     }
     if (form.password.length < MIN_PASSWORD) {
-      setNotice({ type: "error", text: `كلمة المرور لازم تكون ${MIN_PASSWORD} أحرف على الأقل.` });
-      return;
-    }
-    if (form.role === "teacher" && !form.teacherCode.trim()) {
-      setNotice({ type: "error", text: "الرجاء إدخال كود تفعيل حساب المعلم." });
+      setNotice({ type: "error", text: `كلمة المرور يجب أن تكون ${MIN_PASSWORD} أحرف على الأقل.` });
       return;
     }
 
@@ -181,7 +199,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
           full_name: form.name.trim(),
           phone: form.phone.trim(),
           role: form.role,
-          teacher_code: form.role === "teacher" ? form.teacherCode.trim() : null,
         },
       },
     });
@@ -200,15 +217,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
       return;
     }
 
-    const role = await resolveRole(data.user.id);
-    if (form.role === "teacher" && role !== "teacher") {
-      setNotice({
-        type: "error",
-        text: "كود تفعيل المعلم غير صحيح أو منتهي، وتم إنشاء الحساب كطالب. راجع الإدارة لترقية حسابك.",
-      });
-      return;
-    }
-    goToDashboard(role);
+    goToDashboard(await resolveRole(data.user.id));
   };
 
   const handleForgot = async () => {
@@ -231,7 +240,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
       return;
     }
     if (form.password.length < MIN_PASSWORD) {
-      setNotice({ type: "error", text: `كلمة المرور لازم تكون ${MIN_PASSWORD} أحرف على الأقل.` });
+      setNotice({ type: "error", text: `كلمة المرور يجب أن تكون ${MIN_PASSWORD} أحرف على الأقل.` });
       return;
     }
 
@@ -278,15 +287,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
       : "border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400"
   );
 
-  const IconField = ({ icon, children }: { icon: ReactNode; children: ReactNode }) => (
-    <div className="relative">
-      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
-        {icon}
-      </span>
-      {children}
-    </div>
-  );
-
   const submitLabel = isForgot
     ? stepForgot === 1
       ? "إرسال كود التحقق"
@@ -298,7 +298,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
   return (
     <div
       className={cx(
-        "relative flex min-h-screen w-full items-start justify-center overflow-hidden px-4 pt-16 pb-12 transition-colors duration-700 lg:pt-24 lg:pb-16",
+        "relative flex min-h-screen w-full items-center justify-center overflow-hidden p-4 transition-colors duration-700 lg:p-8",
         isDark ? "bg-[#02040A] text-white" : "bg-[#F1F5F9] text-slate-900"
       )}
       dir="rtl"
@@ -319,17 +319,17 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
             : "border-white bg-white/90 shadow-slate-300/60"
         )}
       >
-        {/* ------------------------- العمود التعريفي ------------------------- */}
+        {/* العمود التعريفي */}
         <div className="flex flex-col justify-between space-y-6 lg:col-span-5 lg:border-l lg:border-slate-800/40 lg:pl-8">
           <div>
             <div className="mb-6 flex items-center gap-3">
-              {logoUrl ? (
-                <img src={logoUrl} alt={platformName} className="h-10 w-auto object-contain" />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-xl font-black text-white shadow-md">
-                  {platformName.charAt(0) || "Z"}
-                </div>
-              )}
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-2xl font-black text-white shadow-xl">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={platformName} className="h-full w-full object-cover" />
+                ) : (
+                  platformName.charAt(0) || "Z"
+                )}
+              </div>
               <div>
                 <span
                   className={cx("block text-sm font-black tracking-wider", isDark ? "text-white" : "text-slate-900")}
@@ -373,7 +373,7 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
           </div>
         </div>
 
-        {/* ------------------------- النموذج ------------------------- */}
+        {/* النموذج */}
         <div className="lg:col-span-7">
           <div className="mb-6 flex items-center justify-between gap-3">
             <div>
@@ -600,11 +600,11 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     type={showPassword ? "text" : "password"}
                     name="password"
                     required
-                    minLength={isLogin ? undefined : MIN_PASSWORD}
                     autoComplete={isLogin ? "current-password" : "new-password"}
+                    spellCheck={false}
                     value={form.password}
                     onChange={handleChange}
-                    placeholder="••••••••"
+                    placeholder="••••••"
                     className={cx(inputClass, "pl-10")}
                   />
                   <button
@@ -616,10 +616,41 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     {showPassword ? <HiOutlineEyeOff className="h-4 w-4" /> : <HiOutlineEye className="h-4 w-4" />}
                   </button>
                 </IconField>
-                {!isLogin && (
-                  <p className={cx("mt-1.5 text-[10px]", isDark ? "text-slate-500" : "text-slate-400")}>
-                    {MIN_PASSWORD} أحرف على الأقل، أي حروف أو أرقام.
-                  </p>
+
+                {/* مؤشر قوة كلمة المرور — لطيف ومشجّع، بدون ضغط */}
+                {!isLogin && form.password.length > 0 && (
+                  <div className="mt-2.5 space-y-2 rounded-2xl border border-slate-200/60 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+                    <div className="flex h-1.5 w-full gap-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                      <div
+                        className={cx(
+                          "h-full transition-all duration-300 ease-out rounded-full",
+                          passwordStrengthCount <= 1
+                            ? "w-1/3 bg-amber-500"
+                            : passwordStrengthCount === 2
+                              ? "w-2/3 bg-blue-500"
+                              : "w-full bg-emerald-500"
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] font-semibold">
+                      <span
+                        className={cx("flex items-center gap-1", hasMinLength ? "text-emerald-500" : "text-rose-500")}
+                      >
+                        {hasMinLength ? <HiCheck className="h-3.5 w-3.5" /> : <HiX className="h-3.5 w-3.5" />}
+                        {hasMinLength ? "طول كافٍ" : `محتاجة ${MIN_PASSWORD} أحرف على الأقل`}
+                      </span>
+                      <span className="text-slate-400">
+                        {passwordStrengthCount >= 3 ? "قوية 💪" : passwordStrengthCount === 2 ? "متوسطة" : "بسيطة"}
+                      </span>
+                    </div>
+
+                    {hasMinLength && passwordStrengthCount < 3 && (
+                      <p className="text-[10px] text-slate-400">
+                        نصيحة: ضيف رقم أو خليها أطول عشان تبقى أقوى — من غير ما تعقّدها.
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -636,41 +667,13 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
                     name="confirmPassword"
                     required
                     autoComplete="new-password"
+                    spellCheck={false}
                     value={form.confirmPassword}
                     onChange={handleChange}
-                    placeholder="••••••••"
+                    placeholder="••••••"
                     className={inputClass}
                   />
                 </IconField>
-              </div>
-            )}
-
-            {isSignup && form.role === "teacher" && (
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5">
-                <label
-                  htmlFor="auth-code"
-                  className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-amber-500"
-                >
-                  <HiOutlineShieldCheck className="h-4 w-4" /> كود تفعيل حساب المعلم
-                </label>
-                <div className="relative">
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-amber-500/70">
-                    <HiOutlineShieldCheck className="h-4 w-4" />
-                  </span>
-                  <input
-                    id="auth-code"
-                    type="text"
-                    name="teacherCode"
-                    required
-                    value={form.teacherCode}
-                    onChange={handleChange}
-                    placeholder="أدخل كود المعلمين السري"
-                    className={cx(
-                      "w-full rounded-xl border py-2.5 pl-3 pr-10 text-xs font-semibold focus:outline-none",
-                      isDark ? "border-amber-500/40 bg-slate-900 text-white" : "border-amber-500/40 bg-white text-slate-900"
-                    )}
-                  />
-                </div>
               </div>
             )}
 
