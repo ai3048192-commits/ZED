@@ -318,7 +318,7 @@ const Footer = ({ isDark }) => {
                 { name: 'الكورسات', href: '/courses' },
                 { name: 'عن المنصة', href: '/about' },
                 { name: 'تواصل معنا', href: '/contact' },
-                { name: 'تسجيل الدخول', href: '/auth' }
+                { name: 'تسجيل الدخول', href: '/login' }
               ].map((item, idx) => (
                 <li key={idx}>
                   <a 
