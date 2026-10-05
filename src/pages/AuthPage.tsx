@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
-  HiAcademicCap,
   HiArrowRight,
   HiKey,
   HiOutlineEye,
@@ -12,7 +11,6 @@ import {
   HiOutlinePhone,
   HiOutlineSparkles,
   HiOutlineUser,
-  HiUserGroup,
   HiCheck,
   HiX,
 } from "react-icons/hi";
@@ -455,36 +453,6 @@ export default function AuthPage({ isDark = false }: { isDark?: boolean }) {
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {isSignup && (
               <>
-                <div>
-                  <span className={labelClass}>نوع الحساب</span>
-                  <div role="radiogroup" aria-label="نوع الحساب" className="grid grid-cols-2 gap-3">
-                    {(
-                      [
-                        ["student", "طالب", HiAcademicCap],
-                        ["teacher", "مدرس", HiUserGroup],
-                      ] as const
-                    ).map(([value, label, Icon]) => (
-                      <button
-                        key={value}
-                        type="button"
-                        role="radio"
-                        aria-checked={form.role === value}
-                        onClick={() => setForm((prev) => ({ ...prev, role: value }))}
-                        className={cx(
-                          "flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-xs font-bold transition-all",
-                          form.role === value
-                            ? "border-blue-500 bg-blue-500/10 text-blue-500"
-                            : isDark
-                              ? "border-slate-800 bg-slate-900/40 text-slate-400"
-                              : "border-slate-200 bg-slate-50 text-slate-600"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" /> {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label htmlFor="auth-name" className={labelClass}>
